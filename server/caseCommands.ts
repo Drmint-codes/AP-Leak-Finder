@@ -55,6 +55,9 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
   if (prior.requiresRevalidation && (cmd.type === 'approve' || cmd.type === 'approve_and_request' || cmd.type === 'request')) {
     throw new HttpError(409, 'Revalidate the case evidence before approving or recording another request.', 'revalidation_required')
   }
+  if (prior.requiresRevalidation && (cmd.type === 'followup' || cmd.type === 'followup_days')) {
+    throw new HttpError(409, 'Review the historical request before scheduling another supplier follow-up.', 'revalidation_required')
+  }
   let next: CaseState = prior
   let revisedFinding: Finding | null = null
   const all = (env.result?.findings ?? []).map((row) => factFinding(env, row.id)!).filter(Boolean)
@@ -103,6 +106,7 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
       }
       case 'vendor_update': {
         const data = parse(z.object({ status: z.string().min(1).max(50), note: text.min(1), at: z.number().finite(), amount: money.optional(), method: method.optional(), expectedAt: z.number().finite().optional() }), cmd.input)
+        if (prior.requiresRevalidation && data.status === 'followed_up') throw new HttpError(409, 'Review the historical request before recording another supplier follow-up.', 'revalidation_required')
         next = recordVendorUpdate(prior, data as VendorUpdate, at)
         break
       }

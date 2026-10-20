@@ -39,6 +39,26 @@ describe('server case commands', () => {
     db.close()
   })
 
+  it('blocks manual follow-up records and reminders on a historical sent request while preserving replies', () => {
+    const db = openDatabase(':memory:')
+    db.prepare('INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)').run('alice', 'alice@example.test', 1)
+    const projects = new ProjectStore(db, null)
+    const commands = new CaseCommands(db, projects)
+    const { project, findingId } = authorizedProject('old-request', { vendor: 'Acme', invoice: 'INV-1', amount: 100, requested: 100 })
+    Object.assign(project.environment.caseStates[findingId], { requiresRevalidation: true, recoveryStage: 'requested', recoveryRequestedAt: 100 })
+    projects.upsert('alice', project)
+    const run = (type: 'vendor_update' | 'followup' | 'followup_days' | 'settlement' | 'close', input: unknown, expectedRevision = 1) => commands.execute('alice', 'alice@example.test', 'old-request', {
+      commandId: randomUUID(), expectedRevision, findingId, type, input,
+    })
+    expect(() => run('vendor_update', { status: 'followed_up', note: 'Sent another email', at: 101 })).toThrow(/historical request/i)
+    expect(() => run('followup', { at: 200 })).toThrow(/historical request/i)
+    expect(() => run('followup_days', { days: 7 })).toThrow(/historical request/i)
+    expect(run('vendor_update', { status: 'acknowledged', note: 'Vendor replied to the original request', at: 101 }).revision).toBe(2)
+    expect(run('settlement', { amount: 25, method: 'refund', source: 'manual', reference: 'ACH-OLD-1', settledAt: 101 }, 2).revision).toBe(3)
+    expect(run('close', { reason: 'Original request resolved; remaining amount needs fresh review' }, 3).revision).toBe(4)
+    db.close()
+  })
+
   it('owns transitions and amounts, rejects stale and cross-account writes, and replays a command once', () => {
     const db = openDatabase(':memory:')
     const addUser = db.prepare('INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)')

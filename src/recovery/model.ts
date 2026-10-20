@@ -100,7 +100,7 @@ export interface FollowUpStatus {
  * follow-up"). Only ever an offer: nothing here sends anything.
  */
 export function followUpStatus(state: CaseState, now = Date.now()): FollowUpStatus | null {
-  if (state.recoveryStage !== 'requested' || state.contactHold) return null
+  if (state.recoveryStage !== 'requested' || state.contactHold || state.requiresRevalidation) return null
   const last = lastOutreachAt(state)
   if (last === null) return null
   const reply = (state.vendorUpdates ?? []).filter((u) => VENDOR_STATUS[u.status].progress && u.at >= last).at(-1) ?? null
@@ -110,6 +110,7 @@ export function followUpStatus(state: CaseState, now = Date.now()): FollowUpStat
 
 /** "Follow up after N days": moves the next follow-up to N days after the last email. */
 export function setFollowUpAfterDays(state: CaseState, days: number): CaseState {
+  if (state.requiresRevalidation) throw new Error('Revalidate the historical request before scheduling another follow-up.')
   if (!Number.isInteger(days) || days < 1 || days > 90) throw new Error('Choose between 1 and 90 days.')
   const last = lastOutreachAt(state)
   return { ...state, followUpAfterDays: days, nextFollowUpAt: state.recoveryStage === 'requested' && last !== null ? last + days * DAY : state.nextFollowUpAt ?? null }
@@ -123,6 +124,7 @@ export function recordFollowUpSent(state: CaseState, sent: SentEmail): CaseState
 }
 
 export function setNextFollowUp(state: CaseState, at: number | null): CaseState {
+  if (state.requiresRevalidation) throw new Error('Revalidate the historical request before scheduling another follow-up.')
   if (state.recoveryStage !== 'requested') throw new Error('Only an active request can have a follow-up.')
   if (at !== null && (!Number.isFinite(at) || at <= 0)) throw new Error('Enter a valid follow-up date.')
   return { ...state, nextFollowUpAt: at }
@@ -133,6 +135,7 @@ const CLOCK_SLACK = 60_000
 
 export function recordVendorUpdate(state: CaseState, update: VendorUpdate, now = Date.now()): CaseState {
   if (state.recoveryStage !== 'requested') throw new Error('Send the request before recording a vendor response.')
+  if (state.requiresRevalidation && update.status === 'followed_up') throw new Error('Revalidate the historical request before recording another follow-up.')
   if (!update.note.trim()) throw new Error('Add a note describing the vendor response.')
   if (!Number.isFinite(update.at) || update.at > now + CLOCK_SLACK) throw new Error('A vendor reply cannot be dated in the future.')
   if (update.expectedAt !== undefined && (!Number.isFinite(update.expectedAt) || startOfDay(update.expectedAt) < startOfDay(update.at))) {
@@ -262,6 +265,7 @@ export function recoveryNextAction(state: CaseState, now = Date.now(), internal 
   }
   if (state.recoveryStage === 'requested') {
     if (internal) return { label: 'Record investigation outcome', detail: 'Finish the internal review and record the result.' }
+    if (state.requiresRevalidation) return { label: 'Review historical request', detail: 'The earlier request stays in case history. Supplier contact is paused until a new request can be reviewed and approved.' }
     if (verifiedReturned(state) > 0) return { label: 'Pursue remaining balance', detail: 'Record the next settled return, follow up with the vendor, or close the outstanding balance.', dueAt: state.nextFollowUpAt }
     const last = latestVendorPosition(state)
     if (last?.status === 'credit_issued') return { label: 'Verify credit application', detail: 'A credit memo is pending until it offsets a valid bill.' }
@@ -286,6 +290,7 @@ export function requiresCustomerAction(state: CaseState, now = Date.now(), inter
   if (state.recoveryStage === 'recovered') return verifiedReturned(state) <= 0 || !state.reconciledAt
   if (state.recoveryStage !== 'requested') return false
   if (internal) return true
+  if (state.requiresRevalidation) return true
   if (verifiedReturned(state) > 0) return true
   const last = latestVendorPosition(state)
   return Boolean(last && (VENDOR_STATUS[last.status].needsAction || (last.status === 'accepted' && !last.expectedAt))) || Boolean(state.nextFollowUpAt && state.nextFollowUpAt <= now)
@@ -297,6 +302,7 @@ export function recoveryStatusLabel(state: CaseState, internal = false): string 
   if (internal && (state.recoveryStage === 'not_recovered' || state.recoveryStage === 'recovered')) return 'Review closed'
   if (state.recoveryStage === 'confirmed') return state.contactHold ? 'Contact on hold' : state.approvedAt ? 'Ready to send' : 'Awaiting approval'
   if (state.recoveryStage === 'requested') {
+    if (state.requiresRevalidation) return 'Historical request · review needed'
     if (verifiedReturned(state) > 0) return 'Partially returned'
     const status = latestVendorPosition(state)?.status
     if (status && VENDOR_STATUS[status].caseStatus) return VENDOR_STATUS[status].caseStatus!

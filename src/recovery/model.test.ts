@@ -9,6 +9,7 @@ import {
   followUpStatus,
   recordEmailSent,
   recordFollowUpSent,
+  setNextFollowUp,
   setFollowUpAfterDays,
   recordVendorUpdate,
   requiresCustomerAction,
@@ -30,6 +31,17 @@ const caseFinding: Finding = {
 }
 
 describe('recovery lifecycle', () => {
+  it('routes a historical sent request to review instead of another follow-up', () => {
+    const stale = { ...confirmCase(null), recoveryStage: 'requested' as const, requestedAmount: 1000, recoveryRequestedAt: monday, nextFollowUpAt: monday, requiresRevalidation: true }
+    expect(recoveryNextAction(stale, monday + 1).label).toBe('Review historical request')
+    expect(requiresCustomerAction(stale, monday + 1)).toBe(true)
+    expect(recoveryStatusLabel(stale)).toBe('Historical request · review needed')
+    expect(followUpStatus(stale, monday + 1)).toBeNull()
+    expect(() => recordVendorUpdate(stale, { status: 'followed_up', note: 'Emailed again', at: monday }, monday)).toThrow(/revalidat/i)
+    expect(() => setNextFollowUp(stale, monday + 1)).toThrow(/revalidat/i)
+    expect(() => setFollowUpAfterDays(stale, 7)).toThrow(/revalidat/i)
+    expect(recordVendorUpdate(stale, { status: 'acknowledged', note: 'Vendor replied', at: monday }, monday).vendorUpdates).toHaveLength(1)
+  })
   it('ignores an old unverified amount when recording a new partial settlement', () => {
     const legacy = { ...confirmCase(null), recoveryStage: 'requested' as const, requestedAmount: 1000, recoveredAmount: 400 }
     const next = verifyRecovery(legacy, { amount: 600, method: 'refund', source: 'bank', reference: 'ACH-verified', settledAt: monday })

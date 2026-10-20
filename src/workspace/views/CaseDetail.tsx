@@ -333,7 +333,7 @@ export function CaseDetail(props: CaseDetailProps) {
 
           {workPanel ? <div className="wk-case-work" data-m="work">{workPanel}</div> : null}
 
-          {state.requiresRevalidation ? <p className="wk-field-hint" role="status">This historical case needs a reviewed revalidation before another email follow-up. Its request and recorded returns remain visible.</p> : null}
+          {state.requiresRevalidation ? <p className="wk-field-hint" role="status">This request stays in the case history. You can record its replies and returns. Further supplier contact needs a separate evidence review and new customer approval; that option is not available yet.</p> : null}
 
           {/* Only duplicate rules have a recovery gate; savings and security findings never collect recovery evidence. */}
           {/* Duplicates ask these checks in the evidence questions below, so the short checklist would repeat them. */}

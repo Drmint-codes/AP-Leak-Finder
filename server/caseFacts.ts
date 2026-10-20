@@ -104,7 +104,7 @@ export function authorizedFollowUpFacts(project: Record<string, unknown> | null,
   if (finding.classification !== 'recovery_candidate') return { ok: false, reason: 'Only recovery requests can be followed up.' }
   const state = env?.caseStates?.[findingId] ?? {}
   if (state.recoveryStage !== 'requested') return { ok: false, reason: 'Only a request that has been sent, and is still open, can be followed up.' }
-  if (state.requiresRevalidation) return { ok: false, reason: 'Revalidate this historical request before sending another supplier email.' }
+  if (state.requiresRevalidation) return { ok: false, reason: 'A newly reviewed and approved request is required before further supplier contact.' }
   if (state.contactHold) return { ok: false, reason: 'Vendor contact is on hold.' }
   const requested = Math.round((state.requestedAmount ?? 0) * 100)
   if (requested <= 0) return { ok: false, reason: 'The saved request has no amount.' }

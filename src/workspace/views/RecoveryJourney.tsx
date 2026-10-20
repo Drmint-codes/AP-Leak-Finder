@@ -146,14 +146,14 @@ export function RecoveryProgressPanel({ finding, state, onVendorUpdate, onFollow
           <p className="wk-field-hint">Nothing recorded yet. When the vendor replies, log it here. Reclaim never reads your inbox, so replies only show up once you add them.</p>
         )}
 
-        <div className="wk-followup">
+        {!state.requiresRevalidation ? <div className="wk-followup">
           <CalendarClock aria-hidden="true" />
           <div className="wk-field">
             <label htmlFor="follow-up-date">Next follow-up</label>
             <input id="follow-up-date" type="date" className="wk-input" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} />
           </div>
           <button type="button" className="wk-btn" data-variant="outline" data-size="sm" onClick={() => onFollowUp(finding.id, dateFromInput(followUpDate))}>Save date</button>
-        </div>
+        </div> : null}
       </div>
 
       <div className="wk-panelcard-body wk-stack wk-subsection">
@@ -169,7 +169,7 @@ export function RecoveryProgressPanel({ finding, state, onVendorUpdate, onFollow
               <div className="wk-field">
                 <label htmlFor="vendor-status">What happened?</label>
                 <select id="vendor-status" className="wk-input" value={status} onChange={(e) => setStatus(e.target.value as VendorUpdateStatus)}>
-                  {VENDOR_STATUS_ORDER.map((value) => <option key={value} value={value}>{VENDOR_STATUS[value].label}</option>)}
+                  {VENDOR_STATUS_ORDER.filter((value) => !state.requiresRevalidation || value !== 'followed_up').map((value) => <option key={value} value={value}>{VENDOR_STATUS[value].label}</option>)}
                 </select>
               </div>
               {statusInfo.amount !== 'none' ? (
