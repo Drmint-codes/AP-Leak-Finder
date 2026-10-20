@@ -14,7 +14,7 @@ export function validSettlements(state: CaseState): RecoveryVerification[] {
     Boolean(entry.reference?.trim()) && ['bank', 'accounting', 'document', 'manual'].includes(entry.source) &&
     (entry.method === 'refund' || ((entry.method === 'credit' || entry.method === 'offset') && Boolean(entry.appliedToBill?.trim()))))
 }
-/** Old unverified amount fields remain historical data, never proof of receipt. */
+/** Structurally valid customer-entered returns, not independent bank matching. Old unverified amount fields stay historical. */
 export function verifiedReturned(state: CaseState): number {
   return Math.round(validSettlements(state).reduce((sum, entry) => sum + entry.amount, 0) * 100) / 100
 }

@@ -185,7 +185,7 @@ async function recordSettled(amount?: number, method: 'refund' | 'credit' = 'ref
   fireEvent.click(within(panel).getByRole('button', { name: 'Record settled value' }))
   await waitFor(() => amount === undefined
     ? expect(screen.getAllByText('Returned, reconcile').length).toBeGreaterThan(0)
-    : expect(fact('Received')).toBe(formatCurrency(amount)))
+    : expect(fact('Return recorded by customer')).toBe(formatCurrency(amount)))
 }
 
 /** Close the open request with a reason. */
@@ -465,9 +465,9 @@ describe('AuditApp', () => {
     const partial = Math.round(impact * 0.4 * 100) / 100
     await recordSettled(partial, 'credit')
 
-    expect(fact('Records support')).toBe(value)
+    expect(fact('Flagged value')).toBe(value)
     expect(fact('Requested')).toBe(value)
-    expect(fact('Received')).toBe(formatCurrency(partial))
+    expect(fact('Return recorded by customer')).toBe(formatCurrency(partial))
     expect(fact('Still outstanding')).toBe(formatCurrency(impact - partial))
     expect(fact('Method')).toBe('Account credit')
     const history = screen.getByTestId('case-history')
@@ -508,8 +508,8 @@ describe('AuditApp', () => {
       expect(within(progress).getByRole('alert')).toBeInTheDocument()
       expect(screen.queryByTestId('case-history')).not.toHaveTextContent('Money received recorded')
     }
-    // Nothing arrived, so the case shows no Received row at all rather than a dash.
-    expect(fact('Received')).toBe('')
+    // Nothing arrived, so the case shows no recorded-return row rather than a dash.
+    expect(fact('Return recorded by customer')).toBe('')
     goToMode('Overview')
     expect(stageValue('Recovered')).toBe(formatCurrency(0))
   })
@@ -522,7 +522,7 @@ describe('AuditApp', () => {
 
     cleanup()
     render(<AuditApp />)
-    await waitFor(() => expect(fact('Received')).toBe(formatCurrency(12.34)))
+    await waitFor(() => expect(fact('Return recorded by customer')).toBe(formatCurrency(12.34)))
     expect(screen.getByTestId('case-history')).toHaveTextContent('Money received recorded')
     goToMode('Overview')
     expect(stageValue('Recovered')).toBe(formatCurrency(12.34))
@@ -567,7 +567,7 @@ describe('AuditApp', () => {
     await closeRequest('Vendor declined the rest')
     await waitFor(() => expect(screen.getByRole('button', { name: 'Reopen remaining balance' })).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: 'Reopen remaining balance' }))
-    expect(fact('Received')).toBe(formatCurrency(20))
+    expect(fact('Return recorded by customer')).toBe(formatCurrency(20))
     expect(fact('Still outstanding')).toBe(formatCurrency(impact - 20))
     expect(screen.getByTestId('case-history')).toHaveTextContent('Remaining balance reopened')
     goToMode('Overview')
@@ -585,7 +585,7 @@ describe('AuditApp', () => {
     goToMode('Recoveries')
     fireEvent.click(screen.getAllByRole('button', { name: `Open ${finding.vendor} recovery case` })[0])
     expect(fact('Requested amount')).toMatch(/Missing from legacy case/)
-    expect(fact('Received')).toBe('')
+    expect(fact('Return recorded by customer')).toBe('')
   })
 
   it('copies and downloads the recovery request without sending anything', async () => {

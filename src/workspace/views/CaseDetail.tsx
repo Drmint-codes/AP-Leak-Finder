@@ -161,9 +161,9 @@ function RecoveryFacts({ finding, state }: { finding: Finding; state: CaseState 
     const remaining = requested !== null ? Math.max(0, requested - (received ?? 0)) : null
     const methods = new Set(state.recoverySettlements?.map((entry) => entry.method) ?? [])
     const method = state.recoveredVia ?? state.requestedResolution ?? null
-    rows.push(['Records support', formatCurrency(finding.dollarImpact)], ['Status', status])
+    rows.push(['Flagged value', formatCurrency(finding.dollarImpact)], ['Status', status])
     if (requested !== null) rows.push(['Requested', formatCurrency(requested)])
-    if (received > 0 || state.recoveryStage === 'not_recovered') rows.push(['Received', formatCurrency(received), received > 0])
+    if (received > 0 || state.recoveryStage === 'not_recovered') rows.push(['Return recorded by customer', formatCurrency(received), received > 0])
     if ((state.legacyRecoveredAmount ?? 0) > 0) rows.push(['Older unverified amount (not counted)', formatCurrency(state.legacyRecoveredAmount!)])
     if (requested === null && state.recoveryStage === 'requested') rows.push(['Requested amount', 'Missing from legacy case; confirm the original request'])
     if (remaining !== null && (remaining > 0 || !closed)) rows.push([closed ? 'Unreturned balance' : 'Still outstanding', formatCurrency(remaining)])
@@ -284,7 +284,7 @@ export function CaseDetail(props: CaseDetailProps) {
       />
     ) : state.recoveryStage === 'requested' && !internal ? (
       <>
-        {onFollowUpSent && onFollowUpDays ? (
+        {!state.requiresRevalidation && onFollowUpSent && onFollowUpDays ? (
           <GmailFollowUp key={`follow-up-${finding.id}`} finding={finding} state={state} projectId={projectId} sender={sender} onSent={(receipt) => onFollowUpSent(finding.id, receipt)} onChangeDays={(days) => onFollowUpDays(finding.id, days)} />
         ) : null}
         <RecoveryProgressPanel key={finding.id} finding={finding} state={state} onVendorUpdate={onVendorUpdate} onFollowUp={onFollowUp} onVerify={onVerifyRecovery} onClose={onCloseRecovery} />
@@ -292,6 +292,8 @@ export function CaseDetail(props: CaseDetailProps) {
     ) : state.recoveryStage === 'requested' && internal ? (
       <InternalReviewPanel key={finding.id} onClose={(note) => onRecordOutcome(finding.id, 'not_recovered', null, note, null)} />
     ) : null
+
+  const canEditEvidence = Boolean(onSaveEvidence && !['requested', 'recovered', 'not_recovered'].includes(state.recoveryStage ?? '') && (finding.type === 'exact_duplicate' || finding.type === 'near_duplicate'))
 
   return (
     <>
@@ -309,7 +311,7 @@ export function CaseDetail(props: CaseDetailProps) {
           </div>
         </div>
         <div className="wk-head-copy wk-head-figure">
-          <span className="wk-label">{internal ? 'Flagged value' : 'Records support'}</span>
+          <span className="wk-label">Flagged value</span>
           <strong className="wk-money">{formatCurrency(finding.dollarImpact)}</strong>
         </div>
       </header>
@@ -331,13 +333,13 @@ export function CaseDetail(props: CaseDetailProps) {
 
           {workPanel ? <div className="wk-case-work" data-m="work">{workPanel}</div> : null}
 
-          {state.requiresRevalidation ? <p className="wk-field-hint" role="status">This existing recovery needs its evidence revalidated before any further outreach. Recorded returns stay preserved.</p> : null}
+          {state.requiresRevalidation ? <p className="wk-field-hint" role="status">This historical case needs a reviewed revalidation before another email follow-up. Its request and recorded returns remain visible.</p> : null}
 
           {/* Only duplicate rules have a recovery gate; savings and security findings never collect recovery evidence. */}
           {/* Duplicates ask these checks in the evidence questions below, so the short checklist would repeat them. */}
-          <Evidence finding={finding} checklist={!(onSaveEvidence && (finding.type === 'exact_duplicate' || finding.type === 'near_duplicate'))} />
+          <Evidence finding={finding} checklist={!canEditEvidence} />
 
-          {onSaveEvidence && (finding.type === 'exact_duplicate' || finding.type === 'near_duplicate') ? <EvidencePanel key={`evidence-${finding.id}`} finding={finding} findings={findings} imports={imports} onSave={(evidence) => onSaveEvidence(finding.id, evidence)} /> : null}
+          {canEditEvidence && onSaveEvidence ? <EvidencePanel key={`evidence-${finding.id}`} finding={finding} findings={findings} imports={imports} onSave={(evidence) => onSaveEvidence(finding.id, evidence)} /> : null}
 
           {!internal ? <RecoveryAccountingPanel finding={finding} state={state} onReconcile={onReconcileRecovery} /> : null}
 

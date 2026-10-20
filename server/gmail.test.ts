@@ -442,6 +442,16 @@ describe('following up from Gmail', () => {
     expect(gmail.state.sent).toHaveLength(6)
   })
 
+  it('does not send a follow-up for an open legacy case that still needs revalidation', async () => {
+    const alice = await signedIn('Alice', 'alice@example.com')
+    const { project, findingId, followUp } = await sentCase(alice)
+    Object.assign(project.environment.caseStates[findingId], { requiresRevalidation: true })
+    await seedCase(alice, project)
+    clock += 7 * DAY
+    expect((await followUp(1)).body.code).toBe('recovery_not_authorized')
+    expect(gmail.state.sent).toHaveLength(1)
+  })
+
   it('a request sent by hand can be followed up from Gmail, timed from when it was recorded as sent', async () => {
     const alice = await signedIn('Alice', 'alice@example.com')
     await connect(alice)

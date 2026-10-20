@@ -52,6 +52,9 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
   if (!env || !finding) throw new HttpError(404, 'That case is not in this account.')
   const states = env.caseStates ?? {}
   const prior = states[cmd.findingId] ?? { decision: null, reason: null, decidedAt: null, recoveryStage: null }
+  if (prior.requiresRevalidation && (cmd.type === 'approve' || cmd.type === 'approve_and_request' || cmd.type === 'request')) {
+    throw new HttpError(409, 'Revalidate the case evidence before approving or recording another request.', 'revalidation_required')
+  }
   let next: CaseState = prior
   let revisedFinding: Finding | null = null
   const all = (env.result?.findings ?? []).map((row) => factFinding(env, row.id)!).filter(Boolean)

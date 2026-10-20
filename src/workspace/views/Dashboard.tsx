@@ -140,7 +140,7 @@ export function Dashboard({ env, visible, auditLabel, onOpenCase, onSeeAllFindin
         <button type="button" className="wk-total" data-total="recovered" data-amount={l.recovered} data-empty={l.recovered === 0 || undefined} data-accent={l.recovered > 0 || undefined} onClick={() => onNavigate('recoveries')}>
           <span className="wk-total-label"><span className="wk-label">Returns recorded by your team</span><ArrowRight aria-hidden="true" /></span>
           <strong className="wk-total-value" style={l.recovered > 0 ? { color: 'var(--accent-ink)' } : undefined}><CountUp value={l.recovered} format={money} /></strong>
-          <span className="wk-total-note">{l.counts.recovered === 0 ? 'No independently matched returns yet' : `From ${l.counts.recovered} ${plural(l.counts.recovered, 'case')} · not independently bank-matched`}</span>
+          <span className="wk-total-note">{l.counts.recovered === 0 ? 'No returns recorded yet' : `From ${l.counts.recovered} ${plural(l.counts.recovered, 'case')} · not independently bank-matched`}</span>
         </button>
       </section>
     ),
@@ -236,7 +236,7 @@ export function Dashboard({ env, visible, auditLabel, onOpenCase, onSeeAllFindin
         { id: 'found', label: 'To decide', count: stageCounts.found, note: 'Supported, not reviewed' },
         { id: 'confirmed', label: 'Confirmed', count: stageCounts.confirmed, note: 'Request not sent' },
         { id: 'requested', label: 'Requested', count: stageCounts.requested, note: 'Out with the vendor' },
-        { id: 'recovered', label: 'Recovered', count: stageCounts.recovered, note: 'Money came back' },
+        { id: 'recovered', label: 'Return recorded', count: stageCounts.recovered, note: 'Customer-entered result' },
       ] as const
       return (
         <section className="wk-panelcard" aria-labelledby="ov-pipeline" key="pipeline">

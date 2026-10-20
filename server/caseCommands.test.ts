@@ -22,6 +22,23 @@ describe('server case commands', () => {
     db.close()
   })
 
+  it('refuses a fresh approval or request while a case still needs revalidation', () => {
+    const db = openDatabase(':memory:')
+    db.prepare('INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)').run('alice', 'alice@example.test', 1)
+    const projects = new ProjectStore(db, null)
+    const commands = new CaseCommands(db, projects)
+    const { project, findingId } = authorizedProject('stale', { vendor: 'Acme', invoice: 'INV-1', amount: 100, requested: 100 })
+    Object.assign(project.environment.caseStates[findingId], { requiresRevalidation: true, decision: 'confirmed', reason: null, decidedAt: 100 })
+    projects.upsert('alice', project)
+    const send = (type: 'approve' | 'request', input: unknown) => commands.execute('alice', 'alice@example.test', 'stale', {
+      commandId: randomUUID(), expectedRevision: 1, findingId, type, input,
+    })
+    const pkg = { subject: 'Duplicate payment', body: 'Please review the payments.', recipientEmail: 'supplier@example.test', requestedAmount: 100, method: 'refund' }
+    expect(() => send('approve', { package: pkg, knownBeforeReclaim: false, knownBeforeNote: null })).toThrow(/revalidat/i)
+    expect(() => send('request', { requestedAmount: 100 })).toThrow(/revalidat/i)
+    db.close()
+  })
+
   it('owns transitions and amounts, rejects stale and cross-account writes, and replays a command once', () => {
     const db = openDatabase(':memory:')
     const addUser = db.prepare('INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)')

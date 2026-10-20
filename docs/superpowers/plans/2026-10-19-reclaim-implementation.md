@@ -22,3 +22,10 @@
 - Use additive migrations and small commits after each coherent slice; retain old project access and a restore path.
 - Avoid default parallel test execution after the baseline memory failure; use one worker and targeted files.
 - Review each changed slice against the prompt and run its tests before moving on. The final report will state exactly which plan items completed and which require credentials, real records, policy, or deployment evidence.
+
+## Continuation — 2026-10-20
+
+- Verify the saved checkpoint with one serial full test run before further edits.
+- Close the observed legacy case boundary: an old `requiresRevalidation` case must not authorize a new approval, request, or Gmail follow-up. An already-sent Gmail receipt may still be recorded as history.
+- Match the screen to server behavior: open or closed requests show their saved evidence without offering a save that the server rejects. A separate reviewed workflow for revalidating a previously sent request remains a release blocker.
+- Add focused authorization and UI regression tests, then rerun types, lint, build, and the affected tests. Record the exact checkpoint results and leave the branch clean.
