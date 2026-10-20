@@ -30,3 +30,9 @@
 - Match the screen to server behavior: open or closed requests show their saved evidence without offering a save that the server rejects. A separate reviewed workflow for revalidating a previously sent request remains a release blocker.
 - Add focused authorization and UI regression tests, then rerun types, lint, build, and the affected tests. Record the exact checkpoint results and leave the branch clean.
 - Verify a local encrypted backup/restore round trip with the production-style data key and a copied restore file. Keep the separate hosted restore, offsite backup, and key-custody checks marked unverified.
+
+## Historical sent-request decision — 2026-10-20
+
+- The customer chose to preserve an already-sent historical request and require a newly reviewed and approved request before any more supplier contact. Do not resume follow-ups on the original request.
+- Before implementing that path, introduce explicit request generations: retain each old request's recipient, amount, send receipts, replies, and returns in its generation; calculate new outstanding value without counting an old return twice; require fresh evidence and approval for a new generation. Keep the append-only case events and old-project restore behavior.
+- Verify locally that a backup made before case migration can be restored, migrated, and read with its retained key; a hosted staging restore remains separate.
