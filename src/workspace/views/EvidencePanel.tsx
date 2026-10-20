@@ -38,8 +38,8 @@ const centsToDollars = (cents: number) => (cents > 0 ? (cents / 100).toFixed(2) 
 
 /**
  * A CSV finding starts from what the ledger already says: the bill number and amount the rows share, and the
- * currency (recovery runs in US dollars). Those were placeholders before, which read as answers already given;
- * now they are real values the reviewer checks against the bill. Bank references and the checks stay blank:
+ * currency when present. The reviewer checks these against the bill; unknown
+ * currency stays blank. Bank references and the checks stay blank:
  * the ledger can't vouch for those.
  */
 function fromLedger(finding: Finding): RecoveryEvidence {
@@ -47,8 +47,11 @@ function fromLedger(finding: Finding): RecoveryEvidence {
   const first = finding.relatedRecords[0]
   const sameBill = first?.invoiceNumber && finding.relatedRecords.every((r) => r.invoiceNumber === first.invoiceNumber) ? first.invoiceNumber : ''
   const billAmount = first?.invoiceAmount ?? null
-  const currency = (r?: Finding['relatedRecords'][number]) => (r?.currency ?? 'USD').toUpperCase()
+  const currency = (r?: Finding['relatedRecords'][number]) => (r?.currency ?? '').toUpperCase()
+  const companies = new Set(finding.relatedRecords.map((r) => r.company?.trim()).filter(Boolean))
   return {
+    entity: { ...emptyStamp, entityId: companies.size === 1 ? [...companies][0]! : '' },
+    supplier: { ...emptyStamp, supplierId: '' },
     payments: finding.relatedRecords.map((r) => ({ ...emptyStamp, recordId: r.id, paymentId: '', amountMinor: Math.round(r.amountPaid * 100), currency: currency(r), settled: false, obligationId: sameBill })),
     obligation: { ...emptyStamp, obligationId: sameBill, amountMinor: billAmount ? Math.round(billAmount * 100) : 0, currency: currency(first) },
     checks: {},
@@ -75,7 +78,7 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
   const autofillDates = Object.values(autofilled).filter(a=>a.source==='quickbooks').map(a=>a.pulledAt).filter(Boolean)
   const recordOf = (recordId:string) => finding.relatedRecords.find(r=>r.id===recordId)
   const billAmountInvalid = billAmount.trim() !== '' && dollarsToCents(billAmount) === 0
-  const answered = Boolean(evidence.obligation.obligationId.trim() || evidence.payments.some(p=>p.paymentId.trim() || p.settled) || Object.values(evidence.checks).some(c=>c?.confirmed))
+  const answered = Boolean(evidence.entity?.entityId || evidence.supplier?.supplierId || evidence.obligation.obligationId.trim() || evidence.payments.some(p=>p.paymentId.trim() || p.settled) || Object.values(evidence.checks).some(c=>c?.confirmed))
 
   const check = (key:EvidenceCheck) => <div className="wk-evq-check" key={key}>
     <label className="wk-evq-tick"><input type="checkbox" checked={evidence.checks[key]?.confirmed ?? false} onChange={event=>edit([autofillKey.check(key)],prev=>({...prev,checks:{...prev.checks,[key]:{...emptyStamp,...prev.checks[key],confirmed:event.target.checked}}}))}/> <span>{CHECK_QUESTION[key]}</span> {fromQuickBooks(autofillKey.check(key))}</label>
@@ -83,19 +86,29 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
   </div>
 
   const status = gate.eligible
-    ? <p className="wk-evq-status" data-tone="ready"><strong>Ready to claim {formatCurrency(gate.potentialAmountMinor! / 100)}.</strong> Approve the request next. Nothing is sent to the vendor until you do.</p>
+    ? <p className="wk-evq-status" data-tone="ready"><strong>Possible request supported up to {formatCurrency(gate.potentialAmountMinor! / 100)}.</strong> This is a reviewer assertion until the cited records are independently checked. Approve the recipient, amount and resolution before outreach.</p>
     : answered && gate.contradictoryEvidence.length > 0
       ? <p className="wk-evq-status" data-tone="conflict"><strong>Some answers don’t line up yet.</strong> Open Details to see which.</p>
       : <p className="wk-evq-status"><strong>Not ready to claim yet.</strong> Answer the questions below, then save. Confirming the evidence doesn’t contact the vendor.</p>
 
   return <section className="wk-panelcard" id="evidence-review" aria-labelledby="evidence-review-title">
-    <div className="wk-panelcard-head"><div><h2 id="evidence-review-title">Confirm the evidence</h2><p>A few questions decide whether this is money you can ask the vendor for.</p></div></div>
+    <div className="wk-panelcard-head"><div><h2 id="evidence-review-title">Review the evidence</h2><p>Your answers are assertions based on the cited records, not independent bank verification.</p></div></div>
     <div className="wk-panelcard-body wk-stack">
       {status}
-      <form className="wk-evq" onSubmit={event=>{event.preventDefault();const stamp={confirmedBy:actor.trim(),confirmedAt:Date.now()};const next={...evidence,payments:evidence.payments.map(p=>({...p,...stamp})),obligation:{...evidence.obligation,...stamp},checks:Object.fromEntries(Object.entries(evidence.checks).map(([key,value])=>[key,{...value,...stamp}]))};setEvidence(next);onSave(next);setSaved(true)}}>
+      <form className="wk-evq" onSubmit={event=>{event.preventDefault();const stamp={confirmedBy:actor.trim(),confirmedAt:Date.now()};const next={...evidence,entity:{...(evidence.entity ?? {entityId:'',reference:''}),...stamp},supplier:{...(evidence.supplier ?? {supplierId:'',reference:''}),...stamp},payments:evidence.payments.map(p=>({...p,...stamp})),obligation:{...evidence.obligation,...stamp},checks:Object.fromEntries(Object.entries(evidence.checks).map(([key,value])=>[key,{...value,...stamp}]))};setEvidence(next);onSave(next);setSaved(true)}}>
         {autofillDates.length > 0 && <div className="wk-callout" role="note" data-testid="quickbooks-autofill-note"><div className="wk-callout-body"><p>Answers marked <strong>From QuickBooks</strong> were filled from the QuickBooks import{Math.max(...autofillDates) > 0 ? ` of ${pulledDate.format(Math.max(...autofillDates))}` : ''}: the payment IDs, the bill they paid, and the refund and credit searches. Check each one before saving. QuickBooks doesn’t report whether a payment cleared the bank, so settlement still needs your confirmation.</p></div></div>}
 
-        <fieldset className="wk-evq-group"><legend>1. Is this one bill?</legend>
+        <fieldset className="wk-evq-group"><legend>1. Which company and supplier?</legend>
+          <p className="wk-field-hint">Confirm the legal entity and a stable supplier account or vendor ID. Similar names are only alias suggestions.</p>
+          <div className="wk-evq-grid">
+            {field('Company or legal entity',evidence.entity?.entityId ?? '',value=>edit([autofillKey.entityId],prev=>({...prev,entity:{...emptyStamp,...prev.entity,entityId:value}})),autofillKey.entityId,{placeholder:'Company name or entity ID'})}
+            {field('Where the company is identified',evidence.entity?.reference ?? '',value=>edit([autofillKey.entityReference],prev=>({...prev,entity:{...emptyStamp,entityId:'',...prev.entity,reference:value}})),autofillKey.entityReference,{placeholder:'Source file, bill, or accounting company'})}
+            {field('Supplier account or vendor ID',evidence.supplier?.supplierId ?? '',value=>edit([autofillKey.supplierId],prev=>({...prev,supplier:{...emptyStamp,...prev.supplier,supplierId:value}})),autofillKey.supplierId,{placeholder:'Vendor number from your accounting records'})}
+            {field('Where the supplier ID is shown',evidence.supplier?.reference ?? '',value=>edit([autofillKey.supplierReference],prev=>({...prev,supplier:{...emptyStamp,supplierId:'',...prev.supplier,reference:value}})),autofillKey.supplierReference,{placeholder:'Supplier master record or bill'})}
+          </div>
+        </fieldset>
+
+        <fieldset className="wk-evq-group"><legend>2. Is this one bill?</legend>
           <p className="wk-field-hint">The bill or invoice both payments were for. {!finding.evidence && !autofillDates.length ? 'Filled in from your ledger — check it against the bill.' : null}</p>
           <div className="wk-evq-grid">
             {field('Bill or invoice number',evidence.obligation.obligationId,value=>edit([autofillKey.obligationId],prev=>({...prev,obligation:{...prev.obligation,obligationId:value},payments:prev.payments.map(p=>({...p,obligationId:value}))})),autofillKey.obligationId,{placeholder:finding.relatedRecords[0]?.invoiceNumber ?? 'INV-1001'})}
@@ -105,7 +118,7 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
           </div>
         </fieldset>
 
-        <fieldset className="wk-evq-group"><legend>2. Did {evidence.payments.length === 2 ? 'both' : 'all the'} payments clear?</legend>
+        <fieldset className="wk-evq-group"><legend>3. Did {evidence.payments.length === 2 ? 'both' : 'all the'} payments clear?</legend>
           <p className="wk-field-hint">Check your bank statement for each one.</p>
           {evidence.payments.map((payment,index)=>{const record=recordOf(payment.recordId);return <div className="wk-evq-payment" key={payment.recordId}>
             <strong className="wk-evq-payment-title">{formatCurrency(payment.amountMinor / 100)}{record ? ` paid ${formatDate(record.paymentDate)}` : ''}</strong>
@@ -118,12 +131,12 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
           </div>})}
         </fieldset>
 
-        <fieldset className="wk-evq-group"><legend>3. Any refund, credit or void?</legend>
+        <fieldset className="wk-evq-group"><legend>4. Any refund, credit or void?</legend>
           <p className="wk-field-hint">Make sure the extra payment hasn’t already come back some other way.</p>
           {MONEY_BACK_CHECKS.map(check)}
         </fieldset>
 
-        <fieldset className="wk-evq-group"><legend>4. Is it really a duplicate?</legend>
+        <fieldset className="wk-evq-group"><legend>5. Is it really a duplicate?</legend>
           {REALLY_DUPLICATE_CHECKS.map(check)}
         </fieldset>
 
@@ -135,7 +148,7 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
         <div className="wk-evq-save">
           {field('Person confirming these facts',actor,setActor,undefined,{placeholder:'Your name'})}
           <button className="wk-btn" data-variant="primary" disabled={!actor.trim() || billAmountInvalid}>Save evidence</button>
-          {saved && <p role="status" className="wk-field-hint">Saved. {gate.eligible ? 'This is ready to claim.' : 'Answer the rest when you have it.'}</p>}
+          {saved && <p role="status" className="wk-field-hint">Saved. {gate.eligible ? 'Review the possible request and get customer approval before outreach.' : 'Answer the rest when you have it.'}</p>}
         </div>
       </form>
 
@@ -144,6 +157,7 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
         <dl className="wk-kv">
           <div><dt>Rule</dt><dd>{finding.ruleId ?? finding.type} · version {finding.ruleVersion ?? 1}</dd></div>
           <div><dt>Engine state</dt><dd>{finding.classification ?? 'review_needed'} · {gate.evidenceState.replaceAll('_',' ')}</dd></div>
+          {finding.relatedRecords.some((record) => record.suggestedVendorAlias) ? <div><dt>Alias suggestions</dt><dd>{[...new Set(finding.relatedRecords.map((record) => record.suggestedVendorAlias).filter(Boolean))].join(', ')} · requires human review</dd></div> : null}
           {evidence.payments.map(payment=><div key={payment.recordId}><dt>Ledger record {payment.recordId}</dt><dd>{payment.amountMinor} cents</dd></div>)}
         </dl>
         {gate.contradictoryEvidence.length > 0 && <><h3 className="wk-subhead">What doesn’t line up</h3><ul>{gate.contradictoryEvidence.map((text,i)=><li key={i}>{text}</li>)}</ul></>}

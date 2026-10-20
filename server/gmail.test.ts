@@ -2,11 +2,12 @@
 import { randomBytes } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp, type App } from './app.ts'
-import { loadConfig } from './config.ts'
+import { loadConfig, type ServerConfig } from './config.ts'
 import { openDatabase } from './db.ts'
 import { DevMailer } from './mailer.ts'
 import { buildRawMessage, createGmailClient, GMAIL_SEND_SCOPE, GmailReconnectError, GmailSendError, type GmailClient } from './gmail.ts'
 import { authorizedProject } from './testProject.ts'
+import { ProjectStore } from './projectStore.ts'
 
 // An isolated config: no SMTP, no Resend, nothing that could send real mail.
 const tokenKey = randomBytes(32)
@@ -14,6 +15,7 @@ const config = loadConfig({
   NODE_ENV: 'test', DATABASE_PATH: ':memory:', APP_ORIGIN: 'http://localhost:0', SESSION_DAYS: '1', REMEMBER_ME_DAYS: '30',
   GOOGLE_CLIENT_ID: 'test-client', GOOGLE_CLIENT_SECRET: 'test-secret', GMAIL_TOKEN_KEY: tokenKey.toString('base64'),
 })
+let activeDataKeys: ServerConfig['dataKeys'] = config.dataKeys
 
 /** A stand-in for Google that records every call. It never touches the network. */
 function fakeGmail() {
@@ -113,15 +115,21 @@ const outcome = (res: { headers: Headers }) => new URL(res.headers.get('location
 
 const LETTER = { subject: 'Duplicate payment of invoice INV-1', body: 'Hello,\n\nWe paid invoice INV-1 twice. Please refund $6,800.00.\n\nThanks,\nAlice' }
 
-/** Saves an approved, evidence-backed case on the account, the way the browser would. Each id is its own invoice, so Free's repeat-upload rule doesn't apply. */
+/** Seeds an authorized server snapshot for Gmail route tests. Browser PUT cannot approve cases. */
+async function seedCase(c: Client, project: Record<string, unknown>) {
+  const userId = (await c.get('/api/auth/me')).body.user.id as string
+  new ProjectStore(app.db, activeDataKeys).upsert(userId, project)
+}
+
 async function saveApprovedCase(c: Client, id = 's1', overrides: Record<string, unknown> = {}) {
   const { project, findingId } = authorizedProject(id, { vendor: 'Sierra Coffee Supply', invoice: `INV-${id}`, amount: 6800, requested: 6800 })
   Object.assign(project.environment.caseStates[findingId], { recoverySubject: LETTER.subject, recoveryDraft: LETTER.body, recoveryRecipientEmail: 'ap@sierra.test', ...overrides })
-  expect((await c.put(`/api/projects/${id}`, project)).status).toBe(200)
+  await seedCase(c, project)
   return { project, findingId, payload: { projectId: id, findingId, to: 'ap@sierra.test', cc: [], subject: LETTER.subject, body: LETTER.body, amountRequested: 6800 } }
 }
 
 beforeEach(async () => {
+  activeDataKeys = config.dataKeys
   const db = openDatabase(':memory:')
   gmail = fakeGmail()
   clock = Date.now()
@@ -387,7 +395,7 @@ describe('following up from Gmail', () => {
     const res = await c.post('/api/integrations/gmail/send', saved.payload)
     expect(res.status).toBe(200)
     Object.assign(saved.project.environment.caseStates[saved.findingId], { recoveryStage: 'requested', recoveryRequestedAt: res.body.send.sentAt })
-    expect((await c.put('/api/projects/s1', saved.project)).status).toBe(200)
+    await seedCase(c, saved.project)
     const followUp = (sequence: number, extra: Record<string, unknown> = {}) => c.post('/api/integrations/gmail/follow-up', {
       projectId: 's1', findingId: saved.findingId, sequence, to: 'ap@sierra.test', cc: [], subject: `Re: ${LETTER.subject}`, body: 'Hello again, following up on my email. Thanks, Alice', ...extra,
     })
@@ -428,7 +436,7 @@ describe('following up from Gmail', () => {
     const state = project.environment.caseStates[findingId] as Record<string, unknown>
     for (const change of [{ contactHold: 'Paused by the CFO' }, { recoveryStage: 'recovered' }, { recoveryStage: 'confirmed' }]) {
       Object.assign(state, { recoveryStage: 'requested', contactHold: null }, change)
-      await alice.put('/api/projects/s1', project)
+      await seedCase(alice, project)
       expect((await followUp(6)).body.code).toBe('recovery_not_authorized')
     }
     expect(gmail.state.sent).toHaveLength(6)
@@ -469,6 +477,7 @@ describe('Gmail and the account', () => {
     await app.close()
     app.db.close()
     const db = openDatabase(':memory:')
+    activeDataKeys = keyed.dataKeys
     app = createApp({ config: keyed, db, mailer: new DevMailer(db), google: null, drafts: null, quickbooks: null, gmail: gmail.client })
     base = `http://127.0.0.1:${await app.listen(0)}`
     const alice = await signedIn('Alice', 'alice@example.com')

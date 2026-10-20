@@ -1,6 +1,6 @@
-import type { Finding } from '@/types'
-import type { CaseState, RecoveryVerification } from '@/ledger/caseState'
-import { evaluateEligibility } from '@/recovery/eligibility'
+import type { Finding } from '../types.ts'
+import type { CaseState, RecoveryVerification } from '../ledger/caseState.ts'
+import { evaluateEligibility } from './eligibility.ts'
 
 /** The current money displays support USD only; other currencies remain visible on evidence. */
 export function eligiblePotential(finding: Finding, findings: Finding[]): number | null {

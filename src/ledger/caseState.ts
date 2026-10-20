@@ -1,4 +1,4 @@
-import type { Finding } from '@/types'
+import type { Finding } from '../types.ts'
 
 /** The three outcomes a human can record against a case. */
 export type DecisionValue = 'confirmed' | 'needs_info' | 'expected'

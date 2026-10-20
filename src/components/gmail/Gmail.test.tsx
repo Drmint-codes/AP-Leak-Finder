@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { startLiveServer, type LiveServer } from '@/test/liveServer'
 import { authorizedProject } from '../../../server/testProject.ts'
+import { ProjectStore } from '../../../server/projectStore.ts'
 import { GmailSendError, type GmailClient } from '../../../server/gmail.ts'
 import { RecoveryRequestPanel, type RequestPackage } from '@/workspace/views/RecoveryPanels'
 import { GmailFollowUp, GmailSettings } from '@/components/gmail/Gmail'
@@ -42,6 +43,12 @@ let live: LiveServer
 let gmail: ReturnType<typeof fakeGmail>
 const owner = { firstName: 'Alice', lastName: 'Ng', email: 'alice@example.com', company: 'Ng Co', password: 'correct-horse-battery', confirmPassword: 'correct-horse-battery', acceptedTerms: true, termsVersion: 't' }
 
+/** Seed a server-owned snapshot; the public whole-project route cannot write approvals. */
+function seedCase(project: Record<string, unknown>) {
+  const user = live.app.auth.findUserByEmail(owner.email)!
+  new ProjectStore(live.app.db, null).upsert(user.id, project)
+}
+
 async function signUpAndConnect(connectGmail = true) {
   await live.api('/api/auth/signup', { method: 'POST', json: owner })
   const [mail] = await live.inbox(owner.email)
@@ -60,7 +67,7 @@ async function savedCase() {
   env.caseStates[findingId] = { decision: 'confirmed', reason: null, decidedAt: 1, recoveryStage: 'confirmed' }
   const raw = env.result.findings[0]
   const finding = { ...raw, relatedRecords: env.records } as unknown as Finding
-  expect((await live.api('/api/projects/p1', { method: 'PUT', json: project })).status).toBe(200)
+  seedCase(project)
   return { project, env, finding, findingId }
 }
 
@@ -105,7 +112,7 @@ describe('sending a recovery request from Gmail', () => {
     const { project, env, finding, findingId } = await savedCase()
     const save = async (state: CaseState) => {
       env.caseStates[findingId] = state
-      await live.api('/api/projects/p1', { method: 'PUT', json: project })
+      seedCase(project)
     }
     render(<Harness finding={finding} initial={env.caseStates[findingId]} save={save} />)
     const panel = screen.getByTestId('recovery-request')
@@ -149,7 +156,7 @@ describe('sending a recovery request from Gmail', () => {
     const { project, env, finding, findingId } = await savedCase()
     const save = async (state: CaseState) => {
       env.caseStates[findingId] = state
-      await live.api('/api/projects/p1', { method: 'PUT', json: project })
+      seedCase(project)
     }
     render(<Harness finding={finding} initial={env.caseStates[findingId]} save={save} />)
     const panel = screen.getByTestId('recovery-request')
@@ -220,10 +227,10 @@ describe('following up from Gmail', () => {
     const sent = { channel: 'gmail' as const, messageId: 'msg-original', from: 'owner@gmail.com', to: 'ap@sierra.test', cc: ['controller@ng.test'], sentAt }
     const approved = approveRecovery({ ...env.caseStates[findingId], recoverySubject: 'Duplicate payment of invoice INV-1', recoveryDraft: 'Hello,\nPlease refund $6,800.00.', recoveryRecipientEmail: 'ap@sierra.test', requestedAmount: 6800, requestedResolution: 'refund' }, { knownBeforeReclaim: false, at: sentAt - 1000 })
     env.caseStates[findingId] = { ...recordEmailSent(approved, sent, 6800), ...extra }
-    await live.api('/api/projects/p1', { method: 'PUT', json: project })
+    seedCase(project)
     const save = async (state: CaseState) => {
       env.caseStates[findingId] = state
-      await live.api('/api/projects/p1', { method: 'PUT', json: project })
+      seedCase(project)
     }
     return { finding, initial: env.caseStates[findingId], save }
   }

@@ -24,6 +24,7 @@ import { GmailFollowUp } from '@/components/gmail/Gmail'
 import { RecoveryAccountingPanel, RecoveryProgressPanel } from './RecoveryJourney'
 import { KIND_LABEL, KindChip } from './KindChip'
 import { Strength } from './Strength'
+import { CaseAssistant } from './CaseAssistant'
 import { findingReference, nextActionLabel } from './findingText'
 
 interface CaseDetailProps {
@@ -63,7 +64,7 @@ const stamp = (ts: number) => new Date(ts).toLocaleDateString('en-US', { month: 
 const longDate = (ts: number) => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
 const CHOICES: Array<{ value: DecisionValue; title: string; detail: string; internal: string; icon: typeof CircleCheck }> = [
-  { value: 'confirmed', title: 'This is real', detail: 'The records show money to get back. Prepare the request next.', internal: 'Worth checking inside the business. Opens an internal review.', icon: CircleCheck },
+  { value: 'confirmed', title: 'I reviewed this check', detail: 'You believe these records describe a possible duplicate. The evidence and request amount still need review before outreach.', internal: 'You believe this needs an internal review. No supplier request is created.', icon: CircleCheck },
   { value: 'needs_info', title: 'I need more detail', detail: 'Keep it open while you check a PO, statement or the vendor.', internal: 'Keep it open while you gather more context.', icon: CircleHelp },
   { value: 'expected', title: 'Not an issue', detail: 'Expected, or a detection mistake. It leaves the open findings.', internal: 'Expected, or a detection mistake. It leaves the open findings.', icon: CircleX },
 ]
@@ -377,6 +378,7 @@ export function CaseDetail(props: CaseDetailProps) {
         </div>
 
         <aside className="wk-case-side">
+          <CaseAssistant projectId={projectId} findingId={finding.id} />
           {nextAction ? (
             <section className="wk-panelcard wk-next" data-m="lead" aria-labelledby="case-next">
               <div className="wk-panelcard-body wk-stack">

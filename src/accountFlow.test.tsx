@@ -137,7 +137,7 @@ describe('accounts, data isolation and persistence', () => {
     await logIn(alice)
     await uploadSampleLedger()
     fireEvent.click(document.querySelectorAll('.wk-queue-row:not([data-locked])')[0])
-    fireEvent.click(await screen.findByRole('button', { name: /^This is real/ }))
+    fireEvent.click(await screen.findByRole('button', { name: /^I reviewed this check/ }))
     const dialog = await screen.findByTestId('decision-dialog')
     // A ledger-only signal opens an internal review; only an evidenced candidate prepares an authorization.
     fireEvent.click(within(dialog).getByLabelText(/^(Prepare authorization|Open internal review)/))

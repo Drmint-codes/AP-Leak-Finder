@@ -154,11 +154,11 @@ function lastTable(): HTMLElement {
 
 
 /** Make a decision through the review dialog. */
-async function decide(option: 'This is real' | 'I need more detail' | 'Not an issue') {
+async function decide(option: 'I reviewed this check' | 'I need more detail' | 'Not an issue') {
   fireEvent.click(await screen.findByRole('button', { name: new RegExp(`^${option}`) }))
   const dialog = await screen.findByTestId('decision-dialog')
   // Confirming prepares an authorization on a recovery candidate and opens an internal review on any other signal.
-  const label = option === 'This is real' ? /^(Prepare authorization|Open internal review)/ : new RegExp(`^${option}`)
+  const label = option === 'I reviewed this check' ? /^(Prepare authorization|Open internal review)/ : new RegExp(`^${option}`)
   fireEvent.click(within(dialog).getByLabelText(label))
   fireEvent.click(within(dialog).getByRole('button', { name: 'Save decision' }))
   await waitFor(() => expect(screen.queryByTestId('decision-dialog')).not.toBeInTheDocument())
@@ -351,7 +351,7 @@ describe('AuditApp', () => {
   it('a decision on a case survives a remount and is picked up by Recoveries', async () => {
     const { vendor } = await openAttestedCase()
 
-    await decide('This is real')
+    await decide('I reviewed this check')
     await waitFor(() => expect(screen.getAllByText('Confirmed').length).toBeGreaterThan(0))
 
     cleanup()
@@ -368,7 +368,7 @@ describe('AuditApp', () => {
   it('walks a case through the whole recovery ladder and moves the money onto the Recovered rung', async () => {
     const { value } = await openAttestedCase()
 
-    await decide('This is real')
+    await decide('I reviewed this check')
     await approveAndSend()
     await recordSettled()
 
@@ -386,7 +386,7 @@ describe('AuditApp', () => {
     const verifiedBefore = stageValue('Verified')
     cleanup()
     await openCase(finding.id)
-    await decide('This is real')
+    await decide('I reviewed this check')
     await approveAndSend()
     await recordSettled()
 
@@ -424,7 +424,7 @@ describe('AuditApp', () => {
     await decide('Not an issue')
     fireEvent.click(await screen.findByRole('button', { name: 'Change decision' }))
     expect(await screen.findByRole('group', { name: 'Review this finding' })).toBeInTheDocument()
-    await decide('This is real')
+    await decide('I reviewed this check')
     await approveAndSend()
     // once sent, the decision is locked
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Change decision' })).not.toBeInTheDocument())
@@ -445,7 +445,7 @@ describe('AuditApp', () => {
 
   it('records a partial recovery: dashboard, reports, recoveries and the case summary all show what actually came back', async () => {
     const { value, amount: impact } = await openAttestedCase()
-    await decide('This is real')
+    await decide('I reviewed this check')
 
     // the request panel drafts a letter from the case and lets us pick the method
     const panel = await screen.findByTestId('recovery-request')
@@ -497,7 +497,7 @@ describe('AuditApp', () => {
 
   it('rejects an invalid recovered amount and records nothing', async () => {
     await openAttestedCase()
-    await decide('This is real')
+    await decide('I reviewed this check')
     const progress = await approveAndSend()
     fireEvent.click(within(progress).getByRole('tab', { name: 'Record money back' }))
     fireEvent.change(within(progress).getByLabelText('Settlement reference'), { target: { value: 'ACH-1' } })
@@ -516,7 +516,7 @@ describe('AuditApp', () => {
 
   it('a partial recovery survives a full reload and re-login', async () => {
     await openAttestedCase()
-    await decide('This is real')
+    await decide('I reviewed this check')
     await approveAndSend()
     await recordSettled(12.34)
 
@@ -530,7 +530,7 @@ describe('AuditApp', () => {
 
   it('requires an explicit prior-knowledge disclosure before approving vendor outreach', async () => {
     await openAttestedCase()
-    await decide('This is real')
+    await decide('I reviewed this check')
     const panel = await screen.findByTestId('recovery-request')
     expect(within(panel).getByRole('button', { name: 'Approve recovery request' })).toBeDisabled()
     fireEvent.click(within(panel).getByLabelText('Yes, we already knew'))
@@ -547,7 +547,7 @@ describe('AuditApp', () => {
 
   it('approves and sends in one step, and the history still shows the approval before the send', async () => {
     await openAttestedCase()
-    await decide('This is real')
+    await decide('I reviewed this check')
     const panel = await screen.findByTestId('recovery-request')
     expect(within(panel).getByRole('button', { name: 'Approve and mark sent' })).toBeDisabled()
     fireEvent.click(within(panel).getByLabelText('No, Reclaim surfaced it'))
@@ -561,7 +561,7 @@ describe('AuditApp', () => {
 
   it('reopens a closed remainder without removing its settled return from the dashboard', async () => {
     const { amount: impact } = await openAttestedCase()
-    await decide('This is real')
+    await decide('I reviewed this check')
     await approveAndSend()
     await recordSettled(20)
     await closeRequest('Vendor declined the rest')
@@ -590,7 +590,7 @@ describe('AuditApp', () => {
 
   it('copies and downloads the recovery request without sending anything', async () => {
     await openAttestedCase()
-    await decide('This is real')
+    await decide('I reviewed this check')
     const panel = await screen.findByTestId('recovery-request')
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
@@ -615,7 +615,7 @@ describe('AuditApp', () => {
 
   it('an edited letter is kept on the case, and "Draft with AI" degrades gracefully when the server has no key', async () => {
     await openAttestedCase()
-    await decide('This is real')
+    await decide('I reviewed this check')
     const panel = await screen.findByTestId('recovery-request')
     fireEvent.change(within(panel).getByLabelText('Message'), { target: { value: 'Hand-written request.' } })
     // AI drafting needs the customer's authorization for this exact request first.
@@ -823,7 +823,7 @@ describe('non-claim findings in the recovery flow', () => {
     goToMode('Findings')
     const row = [...document.querySelectorAll('.wk-finding-row')].find((r) => r.textContent?.includes('Vendor bank-account change'))!
     fireEvent.click(row)
-    await decide('This is real')
+    await decide('I reviewed this check')
     fireEvent.click(await screen.findByRole('button', { name: 'Mark as filed' }))
     expect(await screen.findByRole('button', { name: 'Close internal review' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Money came back' })).not.toBeInTheDocument()

@@ -330,7 +330,7 @@ export function Onboarding({ initial, firstName, isGuest, revisit = false, onCom
               <p className="ob-lede">Here’s where everything goes, before you upload a thing.</p>
               <Wide reel="data" theme={resolved}>
                 <Third n="01" title="On this device">
-                  Reading your ledger and running every check happens in your browser. The file itself is never uploaded.
+                  CSV parsing and initial checks happen in your browser. Signed-in projects then sync their payment rows and findings to encrypted server storage.
                 </Third>
                 <Third n="02" title={isGuest ? 'In this tab' : 'With your Reclaim account'}>
                   {isGuest

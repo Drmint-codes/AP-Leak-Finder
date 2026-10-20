@@ -1,13 +1,13 @@
 ---
 title: Pricing — Reclaim
-description: Reclaim has three plans. Free shows what you're owed; Growth is $15 a month plus 10% of money that actually comes back; Flat is $50 a month with no success fee. Refunds and credits go straight to you.
+description: Proposed Reclaim plans: Free, Growth at $15 a month plus a proposed 10% success fee, and Flat at $50 a month. Success-fee billing is disabled pending a verified return and approval policy.
 folder: pricing
 template: pricing
 ---
   <!-- PRICING.
        The three plans as defined in server/plans.ts (the app's source of truth): Free, Growth at $15/month
        plus 10% of money actually recovered, Flat at $50/month with no success fee. Keep this page in step with
-       that file. Billing is not live yet, so paid plans route to Talk to Us rather than checkout. -->
+       that file. These are proposed website prices; verify deployment and Stripe configuration before calling checkout live. -->
 
   <!-- HERO (black): the pricing idea in one line, with jump rows -->
   <section class="section hero-solutions" theme="black">
@@ -16,7 +16,7 @@ template: pricing
       <div class="the-grid">
         <div class="content">
           <h1 class="heading heading1 type-h2" data-split="h1">You keep what<br>comes <span class="highlight">back</span></h1>
-          <p class="desc type-body-medium cl-grey-500">Start free and see what you're owed. Pay a small monthly fee plus a share of what actually comes back, or one flat price with no share at all. Refunds and credits go straight to you, never through Reclaim, and a vendor promising a refund is never counted as money recovered.</p>
+          <p class="desc type-body-medium cl-grey-500">Start with checks of your uploaded records. Growth and Flat show proposed paid pricing; availability depends on billing configuration. The proposed success fee is not being billed from customer-entered returns. Refunds and credits go directly to you.</p>
           <ul class="links">
             <li><a href="#plans" class="hero-services-nav-item type-h4" data-idx="0"><span class="heading">Plans</span><span class="hover-loop down-right cta-button-square cta" theme="outline" size="large"><span class="inner"><svg class="icon"><use href="#i-arrow-dr"/></svg></span></span><span class="line"><span class="line-bg"></span></span></a></li>
             <li><a href="#lifecycle" class="hero-services-nav-item type-h4" data-idx="1"><span class="heading">What counts as recovered</span><span class="hover-loop down-right cta-button-square cta" theme="outline" size="large"><span class="inner"><svg class="icon"><use href="#i-arrow-dr"/></svg></span></span><span class="line"><span class="line-bg"></span></span></a></li>
@@ -106,7 +106,7 @@ template: pricing
                   <li><span class="tick" aria-hidden="true"></span>Cancel any time, in the product</li>
                 </ul>
                 <div class="plan-ask">
-                  <p class="type-body-large">Paid plans open with our supervised pilots, and nothing is charged until then. Tell us about your business and we'll set you up.</p>
+                  <p class="type-body-large">These are proposed plans for a supervised pilot. Confirm price and checkout availability with us before subscribing. Human-managed investigation is scoped separately from the software plan.</p>
                   <a href="#contact" class="cta cta-button" size="large" theme="black" data-modal="talk"><span class="hover-loop"><span class="inner">Talk to Us</span></span></a>
                 </div>
               </div>
@@ -137,7 +137,7 @@ template: pricing
               <div class="the-grid">
                 <div class="left">
                   <div class="desc type-body-headline">Found money and recovered money are different numbers, and Reclaim never blurs them.</div>
-                  <div class="desc2 type-body-large">Every case moves through the same stages, and the Recovery Ledger records the amount at each one, along with how the issue was discovered and whether your team already knew about it. Only one stage counts as recovered: cash that settled, or a credit that actually offset a real bill.</div>
+                  <div class="desc2 type-body-large">A check is a signal, not an amount owed. A person reviews the evidence and approves any supplier request. The Recovery Ledger can record a refund or applied credit entered by your team; independent accounting or bank matching has not been established.</div>
                 </div>
               </div>
             </div>
@@ -147,8 +147,8 @@ template: pricing
                 <ol class="stages">
                   <li class="stage"><span class="stage-no type-mono">01</span><div class="stage-name type-h5">Discover</div><p class="type-body-xs">Related signals become one case: same vendor, same obligation, both payments settled.</p></li>
                   <li class="stage"><span class="stage-no type-mono">02</span><div class="stage-name type-h5">Verify</div><p class="type-body-xs">The records are checked against each other until the amount is provable, or marked as needing review.</p></li>
-                  <li class="stage"><span class="stage-no type-mono">03</span><div class="stage-name type-h5">Recover</div><p class="type-body-xs">You approve it. Reclaim sends the request with the evidence, tracks every reply, and follows up.</p></li>
-                  <li class="stage is-counted"><span class="stage-no type-mono">04</span><div class="stage-name type-h5">Recovered</div><p class="type-body-xs">The refund settled, or the credit offset a real bill. This is the only figure Reclaim reports as recovered.</p></li>
+                  <li class="stage"><span class="stage-no type-mono">03</span><div class="stage-name type-h5">Request</div><p class="type-body-xs">You approve the amount and recipient, contact the supplier, and record replies. Optional Gmail sending needs separate consent and confirmation.</p></li>
+                  <li class="stage is-counted"><span class="stage-no type-mono">04</span><div class="stage-name type-h5">Return recorded</div><p class="type-body-xs">Your team records a refund or applied credit and its reference. The entry is labelled as a customer assertion until independently matched.</p></li>
                   <li class="stage"><span class="stage-no type-mono">05</span><div class="stage-name type-h5">Reconcile</div><p class="type-body-xs">Reclaim gives you the accounting steps to close the case in your books, and you confirm them.</p></li>
                 </ol>
               </div>
@@ -181,9 +181,9 @@ template: pricing
                     <li><details><summary class="type-body-medium">How much does Reclaim cost?</summary><p class="desc type-body-small">Free costs nothing and shows the three smallest findings in each upload. Growth is $15 a month plus 10% of money that actually comes back. Flat is $50 a month with no success fee. Paid plans open with our supervised pilots; <a href="#contact" data-modal="talk">talk to us</a> to join one. Refunds and credits always go directly to you.</p></details></li>
                     <li><details><summary class="type-body-medium">What does the free audit include?</summary><p class="desc type-body-small">Upload an export and Reclaim runs every check on it at no cost. On the free plan, three of the findings are shown in full, with the records behind them. The full list comes with a paid plan.</p></details></li>
                     <li><details><summary class="type-body-medium">What counts as recovered?</summary><p class="desc type-body-small">Cash that settled, or a credit that actually offset a real bill. A vendor agreeing that they owe you is not recovered. A credit note sitting unapplied is not recovered either: it is tracked as confirmed but unapplied until it is used.</p></details></li>
-                    <li><details><summary class="type-body-medium">Which part of the price depends on what's recovered?</summary><p class="desc type-body-small">Only Growth's 10%, and only on cash that settled or a credit that actually offset a real bill. It is worked out from the Recovery Ledger, which records for every case how the issue was discovered, when, and whether your team already knew about it. A finding, a vendor's promise or an unused credit is never charged. On Flat, nothing depends on recovery.</p></details></li>
+                    <li><details><summary class="type-body-medium">Which part of the price depends on what's recovered?</summary><p class="desc type-body-small">Growth proposes a 10% success fee. Automated success-fee billing is disabled while attribution, independent matching, reversals, customer approval and invoiceable events are defined. A check, promise, unused credit, or customer-entered return does not by itself create a fee.</p></details></li>
                     <li><details><summary class="type-body-medium">What about a credit we already had?</summary><p class="desc type-body-small">An unused vendor credit is money you already own, so recovering it may need no outreach at all. Reclaim shows you the credit and recommends whether to apply it to an upcoming bill or ask for a cash refund. It counts once the credit is actually used or the refund arrives.</p></details></li>
-                    <li><details><summary class="type-body-medium">Can Reclaim move money or change our books?</summary><p class="desc type-body-small">No. Reclaim works from files you upload and has no access to your accounting system. It cannot move money, cannot alter your ledger, and cannot send anything to a vendor without your approval. Refunds go directly to you; Reclaim never takes custody of recovered funds.</p></details></li>
+                    <li><details><summary class="type-body-medium">Can Reclaim move money or change our books?</summary><p class="desc type-body-small">Reclaim cannot move money. CSV upload is the demonstrated input. QuickBooks connection code uses an Intuit accounting OAuth scope that permits writes, though the current import adapter uses read requests; production access is not verified here. Supplier email requires your confirmation and a separate Gmail sending connection.</p></details></li>
                     <li><details><summary class="type-body-medium">Will you contact our vendors without asking?</summary><p class="desc type-body-small">No. The first outreach on any case needs your approval, and you can mark any vendor Do Not Contact: detection keeps running, outreach stops. Later, we plan to let you choose rules under which approved playbooks start on their own, such as exact duplicates under an amount you set. That mode, Recovery Autopilot, is software you configure, not a person working your cases, and it isn't available yet.</p></details></li>
                     <li><details><summary class="type-body-medium">What happens to a disputed case?</summary><p class="desc type-body-small">Automation stops and the case comes back to you. Anything subjective, contested, or legal is a decision for your team, not a step a playbook takes on its own.</p></details></li>
                     <li><details><summary class="type-body-medium">How do we get started?</summary><p class="desc type-body-small">Onboarding is self-service: upload your exports, choose how far back to look, and the first sweep starts. Billing and cancelling happen in the product too, with no call needed.</p></details></li>
