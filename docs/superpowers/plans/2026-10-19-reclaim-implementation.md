@@ -29,3 +29,4 @@
 - Close the observed legacy case boundary: an old `requiresRevalidation` case must not authorize a new approval, request, or Gmail follow-up. An already-sent Gmail receipt may still be recorded as history.
 - Match the screen to server behavior: open or closed requests show their saved evidence without offering a save that the server rejects. A separate reviewed workflow for revalidating a previously sent request remains a release blocker.
 - Add focused authorization and UI regression tests, then rerun types, lint, build, and the affected tests. Record the exact checkpoint results and leave the branch clean.
+- Verify a local encrypted backup/restore round trip with the production-style data key and a copied restore file. Keep the separate hosted restore, offsite backup, and key-custody checks marked unverified.
