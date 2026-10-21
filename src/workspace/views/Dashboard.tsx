@@ -7,6 +7,7 @@ import { useEntitlements } from '@/lib/auth/AuthContext'
 import { Locked } from '@/components/plan/Locked'
 import { internalReviews, ladder, opportunities, recentReturns, recordedRootCauses, recoveries, recoveryAging, rootCauses, vendorCommitments, vendors, type Opportunity } from '../selectors'
 import { recoveryNextAction, requiresCustomerAction } from '@/recovery/model'
+import { activeReturned } from '@/recovery/financials'
 import { dueStatus, vendorTone, type StatusTone } from '@/recovery/status'
 import { usePreferences, useHeadlineMoney, type OverviewSectionId } from '../preferences'
 import type { WorkspaceMode } from '../WorkspaceShell'
@@ -159,7 +160,7 @@ export function Dashboard({ env, visible, auditLabel, onOpenCase, onSeeAllFindin
           <div className="wk-queue">
             {tasks.slice(0, 5).map(({ o, action, internal }) => {
               const due = dueStatus(action.dueAt, now, shortDate.format)
-              const outstanding = o.state.recoveryStage === 'requested' ? Math.max(0, (o.state.requestedAmount ?? o.finding.dollarImpact) - (o.state.recoveredAmount ?? 0)) : o.finding.dollarImpact
+              const outstanding = o.state.recoveryStage === 'requested' ? Math.max(0, (o.state.requestedAmount ?? o.finding.dollarImpact) - activeReturned(o.state)) : o.finding.dollarImpact
               return (
                 <button key={o.finding.id} type="button" className="wk-queue-row" data-amount={outstanding} onClick={() => onOpenCase(o.finding.id)}>
                   <span className="wk-queue-main">

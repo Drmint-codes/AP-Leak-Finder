@@ -3,7 +3,7 @@ import { CalendarClock, CircleCheck } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
 import { type CaseState, type RecoveryMethod, type RecoveryVerification, type VendorUpdate, type VendorUpdateStatus } from '@/ledger/caseState'
 import { latestVendorPosition, VENDOR_STATUS, VENDOR_STATUS_ORDER } from '@/recovery/vendorStatus'
-import { verifiedReturned } from '@/recovery/financials'
+import { activeReturned, verifiedReturned } from '@/recovery/financials'
 import type { Finding } from '@/types'
 
 const SETTLEMENT_METHOD_LABEL: Record<RecoveryMethod, string> = { refund: 'Cash refund', credit: 'Applied vendor credit', offset: 'Payment offset' }
@@ -38,7 +38,7 @@ export function RecoveryProgressPanel({ finding, state, onVendorUpdate, onFollow
   onClose: (id: string, reason: string) => void
 }) {
   const requested = state.requestedAmount ?? 0
-  const returned = verifiedReturned(state)
+  const returned = activeReturned(state)
   const remaining = Math.max(0, Math.round(requested * 100 - returned * 100) / 100)
   const position = latestVendorPosition(state)
   // Open on the most likely next step: money back once some has arrived or is on its way.
@@ -126,7 +126,7 @@ export function RecoveryProgressPanel({ finding, state, onVendorUpdate, onFollow
           <ol className="wk-log" aria-label="Vendor conversation">
             {[
               ...(state.vendorUpdates ?? []).map((update) => ({ at: update.at, kind: 'reply' as const, update })),
-              ...(state.recoverySettlements ?? []).map((settlement) => ({ at: settlement.settledAt, kind: 'money' as const, settlement })),
+              ...(state.recoverySettlements ?? []).filter((settlement) => (settlement.requestGeneration ?? 1) === (state.activeRequestGeneration ?? 1)).map((settlement) => ({ at: settlement.settledAt, kind: 'money' as const, settlement })),
             ]
               .sort((a, b) => a.at - b.at)
               .map((entry, index) => entry.kind === 'reply' ? (
@@ -288,7 +288,7 @@ export function RecoveryAccountingPanel({ finding, state, onReconcile }: { findi
       <div className="wk-panelcard-head">
         <div>
           <h2 id="books-title">In your books</h2>
-          <p>{formatCurrency(returned)} came back across {settlements.length || 1} {settlements.length === 1 ? 'settlement' : 'settlements'}{requested > returned && state.recoveryOutcomeNote ? `; the other ${formatCurrency(requested - returned)} was closed: ${state.recoveryOutcomeNote}` : ''}.</p>
+          <p>{formatCurrency(returned)} came back across {settlements.length || 1} {settlements.length === 1 ? 'settlement' : 'settlements'}{requested > activeReturned(state) && state.recoveryOutcomeNote ? `; the current request has ${formatCurrency(requested - activeReturned(state))} not returned: ${state.recoveryOutcomeNote}` : ''}.</p>
         </div>
       </div>
       <div className="wk-panelcard-body wk-stack">

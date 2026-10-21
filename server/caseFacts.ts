@@ -3,8 +3,9 @@ import type { Finding } from '../src/types.ts'
 import type { DraftRequest } from './ai.ts'
 
 type StoredRecord = Record<string, unknown> & { id: string }
-type StoredState = { recoveryRequestedAt?: number | null; recoverySubject?: string | null; recoveryDraft?: string | null; recoveryRecipientEmail?: string | null; approvedAt?: number | null; requestedAmount?: number | null; requestedResolution?: DraftRequest['method'] | null; contactHold?: string | null; requiresRevalidation?: boolean; recoveryStage?: DraftRequest['recoveryStage']; recoverySettlements?: Array<{ amount: number; reference: string; settledAt: number; source: string; method: string; appliedToBill?: string }>; recoveryVerification?: { amount: number; reference: string; settledAt: number; source: string; method: string; appliedToBill?: string } | null }
-const settled = (s: StoredState) => Math.round((s.recoverySettlements ?? (s.recoveryVerification ? [s.recoveryVerification] : [])).filter(e => Number.isFinite(e.amount) && e.amount > 0 && Number.isFinite(e.settledAt) && e.settledAt > 0 && Boolean(e.reference?.trim()) && ['bank', 'accounting', 'document', 'manual'].includes(e.source) && (e.method === 'refund' || ((e.method === 'credit' || e.method === 'offset') && Boolean(e.appliedToBill?.trim())))).reduce((sum, e) => sum + e.amount, 0) * 100) / 100
+type StoredState = { activeRequestGeneration?: number; recoveryRequestedAt?: number | null; recoverySubject?: string | null; recoveryDraft?: string | null; recoveryRecipientEmail?: string | null; approvedAt?: number | null; requestedAmount?: number | null; requestedResolution?: DraftRequest['method'] | null; contactHold?: string | null; requiresRevalidation?: boolean; recoveryStage?: DraftRequest['recoveryStage']; recoverySettlements?: Array<{ amount: number; reference: string; settledAt: number; source: string; method: string; appliedToBill?: string; requestGeneration?: number }>; recoveryVerification?: { amount: number; reference: string; settledAt: number; source: string; method: string; appliedToBill?: string; requestGeneration?: number } | null }
+const settlements = (s: StoredState) => (s.recoverySettlements ?? (s.recoveryVerification ? [s.recoveryVerification] : [])).filter(e => Number.isFinite(e.amount) && e.amount > 0 && Number.isFinite(e.settledAt) && e.settledAt > 0 && Boolean(e.reference?.trim()) && ['bank', 'accounting', 'document', 'manual'].includes(e.source) && (e.method === 'refund' || ((e.method === 'credit' || e.method === 'offset') && Boolean(e.appliedToBill?.trim()))))
+const settled = (s: StoredState, generation?: number) => Math.round(settlements(s).filter(e => generation === undefined || (e.requestGeneration ?? 1) === generation).reduce((sum, e) => sum + e.amount, 0) * 100) / 100
 
 const iso = (v: unknown) => (typeof v === 'string' && v ? v.slice(0, 10) : null)
 
@@ -34,8 +35,10 @@ function authorizedRequest(project: Record<string, unknown> | null, findingId: s
   if (state.recoveryStage !== 'confirmed') return { ok: false, reason: stageReason }
   if (!state.approvedAt || state.contactHold || state.requiresRevalidation) return { ok: false, reason: 'The customer has not authorized this recovery request.' }
   if (state.requestedAmount == null || Math.round(state.requestedAmount * 100) !== cents) return { ok: false, reason: 'The requested amount does not match the authorized amount.' }
-  if (cents > gate.potentialAmountMinor) return { ok: false, reason: 'The requested amount is more than the evidence supports.' }
-  if (Math.round(settled(state) * 100) >= cents) return { ok: false, reason: 'The authorized request has already been settled.' }
+  const activeGeneration = state.activeRequestGeneration ?? 1
+  const olderReturnedMinor = Math.round((settled(state) - settled(state, activeGeneration)) * 100)
+  if (cents > gate.potentialAmountMinor - olderReturnedMinor) return { ok: false, reason: 'The requested amount is more than the evidence supports after earlier returns.' }
+  if (Math.round(settled(state, activeGeneration) * 100) >= cents) return { ok: false, reason: 'The authorized request has already been settled.' }
   if (!state.requestedResolution) return { ok: false, reason: 'The saved request has no authorized resolution method.' }
   return { ok: true, finding, potentialAmountMinor: gate.potentialAmountMinor, state: state as Extract<Authorized, { ok: true }>['state'] }
 }
@@ -108,6 +111,6 @@ export function authorizedFollowUpFacts(project: Record<string, unknown> | null,
   if (state.contactHold) return { ok: false, reason: 'Vendor contact is on hold.' }
   const requested = Math.round((state.requestedAmount ?? 0) * 100)
   if (requested <= 0) return { ok: false, reason: 'The saved request has no amount.' }
-  if (Math.round(settled(state) * 100) >= requested) return { ok: false, reason: 'The request has already been settled.' }
+  if (Math.round(settled(state, state.activeRequestGeneration ?? 1) * 100) >= requested) return { ok: false, reason: 'The request has already been settled.' }
   return { ok: true, vendor: String(finding.vendor ?? ''), requestedAt: Number.isFinite(state.recoveryRequestedAt) ? (state.recoveryRequestedAt as number) : null }
 }

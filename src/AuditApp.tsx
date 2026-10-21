@@ -61,9 +61,10 @@ import {
   type RecoveryVerification,
   type VendorUpdate,
 } from '@/ledger/caseState'
-import { approveRecovery, closeWithoutRecovery, recordVendorUpdate, reconcileRecovery, recordEmailSent, recordFollowUpSent, reopenRemainingBalance, setFollowUpAfterDays, setContactHold, setNextFollowUp, startRecoveryRequest, verifyRecovery } from '@/recovery/model'
+import { approveRecovery, beginNewRequestReview, closeWithoutRecovery, recordHistoricalSettlement, recordVendorUpdate, reconcileRecovery, recordEmailSent, recordFollowUpSent, reopenRemainingBalance, setFollowUpAfterDays, setContactHold, setNextFollowUp, startRecoveryRequest, verifyRecovery } from '@/recovery/model'
+import { activeReturned, verifiedReturned } from '@/recovery/financials'
 import type { GmailSendReceipt } from '@/lib/gmailApi'
-import { assertRecoveryEligible, type RecoveryEvidence } from '@/recovery/eligibility'
+import { assertRecoveryEligible, evaluateEligibility, type RecoveryEvidence } from '@/recovery/eligibility'
 import { useEntitlements, useOptionalAuth } from '@/lib/auth/AuthContext'
 import { Locked } from '@/components/plan/Locked'
 import { Onboarding } from '@/onboarding/Onboarding'
@@ -397,14 +398,18 @@ export function AuditApp() {
 
   const handleDecide = useCallback(
     (findingId: string, value: DecisionValue, reason: string | null, dismissalTag: DismissalTag | null = null) => {
-      persistCaseState(findingId, (current) =>
-        current.decision === value
+      persistCaseState(findingId, (current) => {
+        const decided = current.decision === value
           ? updateCaseReason(current, reason)
           : value === 'confirmed'
             ? confirmCase(reason)
             : value === 'needs_info'
               ? markNeedsInfo(reason)
-              : markExpected(reason, dismissalTag),
+              : markExpected(reason, dismissalTag)
+        return (current.activeRequestGeneration ?? 1) > 1
+          ? { ...decided, activeRequestGeneration: current.activeRequestGeneration, archivedRequests: current.archivedRequests, recoverySettlements: current.recoverySettlements, recoveredAmount: verifiedReturned(current), legacyRecoveredAmount: current.legacyRecoveredAmount, requiresRevalidation: current.requiresRevalidation, history: current.history }
+          : decided
+      },
         { type: 'decision', input: { decision: value, reason } }
       )
     },
@@ -419,11 +424,30 @@ export function AuditApp() {
     if (!finding || finding.class !== 'recoverable') return false
     try {
       assertRecoveryEligible(finding, findings, requestedAmount)
+      const current = environmentRef.current ? getCaseState(environmentRef.current, findingId) : null
+      if (current) {
+        const previousReturn = verifiedReturned(current) - activeReturned(current)
+        const potentialMinor = evaluateEligibility(finding, finding.evidence, findings).potentialAmountMinor ?? 0
+        if (Math.round(requestedAmount * 100) > potentialMinor - Math.round(previousReturn * 100)) return true
+      }
       return false
     } catch {
       return true
     }
   }, [])
+
+  const handleBeginNewRequestReview = useCallback((findingId: string) => {
+    persistCaseState(findingId, (current) => beginNewRequestReview(current), { type: 'begin_new_request_review', input: { acknowledged: true } })
+  }, [persistCaseState])
+
+  const handleHistoricalSettlement = useCallback((findingId: string, generation: number, proof: RecoveryVerification) => {
+    persistCaseState(findingId, (current) => {
+      const finding = environmentRef.current?.result.findings.find((row) => row.id === findingId)
+      const findings = environmentRef.current?.result.findings ?? []
+      const potentialMinor = finding ? evaluateEligibility(finding, finding.evidence, findings).potentialAmountMinor : null
+      return recordHistoricalSettlement(current, generation, proof, potentialMinor == null ? 0 : potentialMinor / 100)
+    }, { type: 'historical_settlement', input: { ...proof, generation } })
+  }, [persistCaseState])
 
   const handleSaveEvidence = useCallback((findingId: string, evidence: RecoveryEvidence) => {
     const env = environmentRef.current
@@ -839,6 +863,8 @@ export function AuditApp() {
               onRecordOutcome={handleRecordOutcome}
               onReopen={handleReopen}
               onReopenBalance={handleReopenBalance}
+              onBeginNewRequestReview={handleBeginNewRequestReview}
+              onHistoricalSettlement={handleHistoricalSettlement}
               onApproveRecovery={handleApproveRecovery}
               onApproveAndSend={handleApproveAndSend}
               onEmailSent={handleEmailSent}

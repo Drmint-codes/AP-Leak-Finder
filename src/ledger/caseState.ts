@@ -35,6 +35,8 @@ export interface RecoveryVerification {
   settledAt: number
   /** Required for credits and offsets: issuance alone is not returned value. */
   appliedToBill?: string
+  /** Request this return belongs to. Untagged historical rows belong to generation 1. */
+  requestGeneration?: number
 }
 
 /**
@@ -79,6 +81,10 @@ export interface CaseEvent {
 }
 
 export interface CaseState {
+  /** Active supplier request generation; older saved cases have generation 1. */
+  activeRequestGeneration?: number
+  /** Read-only snapshots of earlier requests; settlements remain in the case-level list. */
+  archivedRequests?: ArchivedRequest[]
   /** Existing open cases must pass the evidence gate again before outreach. */
   requiresRevalidation?: boolean
   decision: DecisionValue | null
@@ -114,6 +120,8 @@ export interface CaseState {
   requestedEvidence?: string[] | null
   /** Customer approval to pursue the first vendor contact. Older cases may have no approval record. */
   approvedAt?: number | null
+  /** Earlier approval quarantined during migration; retained as history, never authorizes contact. */
+  legacyApprovedAt?: number | null
   knownBeforeReclaim?: boolean | null
   /** Customer disclosure supporting a prior-knowledge answer at approval. */
   knownBeforeNote?: string | null
@@ -127,6 +135,16 @@ export interface CaseState {
   reconciliationNote?: string | null
   rootCause?: string | null
 }
+
+/** Request details preserved before a fresh review; case events and settlements stay case-wide. */
+export type ArchivedRequest = Pick<CaseState,
+  'decision' | 'reason' | 'decidedAt' | 'recoveryStage' | 'requestedAmount' | 'approvedAt' | 'legacyApprovedAt' |
+  'knownBeforeReclaim' | 'knownBeforeNote' | 'recoveryDraft' | 'recoverySubject' |
+  'recoveryRecipientEmail' | 'requestedResolution' | 'recoveryRequestedAt' | 'recoverySentEmail' |
+  'recoveryFollowUps' | 'followUpAfterDays' | 'vendorUpdates' | 'recoveryResolvedAt' |
+  'recoveryOutcomeNote' | 'reconciledAt' | 'reconciliationNote' | 'rootCause' |
+  'legacyRecoveredAmount'
+> & { generation: number; archivedAt: number; returnedAmountAtArchive: number }
 
 export const EMPTY_CASE_STATE: CaseState = { decision: null, reason: null, decidedAt: null, recoveryStage: null }
 
@@ -239,15 +257,19 @@ export function withHistory(previous: CaseState, next: CaseState, actor: string 
   const vendorChanged = (previous.vendorUpdates?.length ?? 0) !== (next.vendorUpdates?.length ?? 0)
   const settlementsChanged = (previous.recoverySettlements?.length ?? 0) !== (next.recoverySettlements?.length ?? 0)
   const settlementAdded = (next.recoverySettlements?.length ?? 0) > (previous.recoverySettlements?.length ?? 0)
+  const requestArchived = (next.archivedRequests?.length ?? 0) > (previous.archivedRequests?.length ?? 0)
   const followUpChanged = (previous.nextFollowUpAt ?? null) !== (next.nextFollowUpAt ?? null)
   const followUpSent = (next.recoveryFollowUps?.length ?? 0) > (previous.recoveryFollowUps?.length ?? 0)
   const reconciliationChanged = (previous.reconciledAt ?? null) !== (next.reconciledAt ?? null)
   const reconciliationDetailsChanged = (previous.reconciliationNote ?? null) !== (next.reconciliationNote ?? null) || (previous.rootCause ?? null) !== (next.rootCause ?? null)
-  if (!decisionChanged && !stageChanged && !amountChanged && !requestedChanged && !approvalChanged && !attributionChanged && !holdChanged && !vendorChanged && !settlementsChanged && !followUpChanged && !followUpSent && !reconciliationChanged && !reconciliationDetailsChanged) return next
+  if (!requestArchived && !decisionChanged && !stageChanged && !amountChanged && !requestedChanged && !approvalChanged && !attributionChanged && !holdChanged && !vendorChanged && !settlementsChanged && !followUpChanged && !followUpSent && !reconciliationChanged && !reconciliationDetailsChanged) return next
 
   let action: string
   let summary: string
-  if (stageChanged && previous.recoveryStage === 'recovered' && next.recoveryStage === 'requested' && (previous.recoveredAmount ?? 0) > 0 && previous.recoveredAmount === next.recoveredAmount) {
+  if (requestArchived) {
+    action = 'request:archived'
+    summary = 'Earlier supplier request preserved; new review started'
+  } else if (stageChanged && previous.recoveryStage === 'recovered' && next.recoveryStage === 'requested' && (previous.recoveredAmount ?? 0) > 0 && previous.recoveredAmount === next.recoveredAmount) {
     action = 'recovery:remainder_reopened'
     summary = 'Remaining balance reopened'
   } else if (stageChanged && next.recoveryStage === 'requested' && (previous.recoveryStage === 'recovered' || previous.recoveryStage === 'not_recovered')) {
@@ -312,10 +334,11 @@ export function withHistory(previous: CaseState, next: CaseState, actor: string 
 
   const lastSettlement = next.recoverySettlements?.at(-1)
   const lastVendorUpdate = next.vendorUpdates?.at(-1)
-  const remaining = next.requestedAmount == null ? null : Math.max(0, Math.round(next.requestedAmount * 100) - Math.round((next.recoveredAmount ?? 0) * 100)) / 100
+  const activeReturned = (state: CaseState) => (state.recoverySettlements ?? (state.recoveryVerification ? [state.recoveryVerification] : [])).filter((entry) => (entry.requestGeneration ?? 1) === (state.activeRequestGeneration ?? 1)).reduce((sum, entry) => sum + entry.amount, 0)
+  const remaining = next.requestedAmount == null ? null : Math.max(0, Math.round(next.requestedAmount * 100) - Math.round(activeReturned(next) * 100)) / 100
   let eventAmount: number | null = null
-  if (action === 'outcome:reopened') eventAmount = previous.recoveryStage === 'not_recovered' ? previous.requestedAmount ?? null : -(previous.recoveredAmount ?? 0)
-  else if (action === 'recovery:remainder_reopened') eventAmount = Math.max(0, Math.round((previous.requestedAmount ?? 0) * 100) - Math.round((previous.recoveredAmount ?? 0) * 100)) / 100
+  if (action === 'outcome:reopened') eventAmount = previous.recoveryStage === 'not_recovered' ? previous.requestedAmount ?? null : -((previous.activeRequestGeneration ?? 1) > 1 ? activeReturned(previous) : (previous.recoveredAmount ?? 0))
+  else if (action === 'recovery:remainder_reopened') eventAmount = Math.max(0, Math.round((previous.requestedAmount ?? 0) * 100) - Math.round(activeReturned(previous) * 100)) / 100
   else if (action === 'recovery:remainder_closed' || action === 'outcome:not_recovered') eventAmount = remaining
   else if (action === 'recovery:settlement_recorded') eventAmount = lastSettlement?.amount ?? null
   else if (action.startsWith('vendor:')) eventAmount = lastVendorUpdate?.amount ?? null
@@ -469,12 +492,19 @@ export function withHistory(previous: CaseState, next: CaseState, actor: string 
  */
 export function reopenDecision(state: CaseState): CaseState {
   if (state.recoveryStage === 'requested' || state.recoveryStage === 'recovered' || state.recoveryStage === 'not_recovered') return state
-  return { ...EMPTY_CASE_STATE, reason: state.reason, recoveryDraft: state.recoveryDraft, recoverySubject: state.recoverySubject, recoveryRecipientEmail: state.recoveryRecipientEmail, requestedResolution: state.requestedResolution }
+  const base = { ...EMPTY_CASE_STATE, reason: state.reason, recoveryDraft: state.recoveryDraft, recoverySubject: state.recoverySubject, recoveryRecipientEmail: state.recoveryRecipientEmail, requestedResolution: state.requestedResolution }
+  return (state.activeRequestGeneration ?? 1) > 1
+    ? { ...base, activeRequestGeneration: state.activeRequestGeneration, archivedRequests: state.archivedRequests, recoverySettlements: state.recoverySettlements, recoveredAmount: state.recoveredAmount, legacyRecoveredAmount: state.legacyRecoveredAmount, requiresRevalidation: state.requiresRevalidation, history: state.history }
+    : base
 }
 
 /** Undo a recorded outcome: the request is still out, and the money figure is cleared rather than kept as a stale claim. */
 export function reopenOutcome(state: CaseState): CaseState {
   if (state.recoveryStage !== 'recovered' && state.recoveryStage !== 'not_recovered') return state
+  if ((state.activeRequestGeneration ?? 1) > 1) {
+    const prior = (state.recoverySettlements ?? []).filter((entry) => (entry.requestGeneration ?? 1) !== state.activeRequestGeneration)
+    return { ...state, recoveryStage: 'requested', recoveredAmount: Math.round(prior.reduce((sum, entry) => sum + entry.amount, 0) * 100) / 100, recoveredVia: null, recoveryOutcomeNote: null, recoveryResolvedAt: null, recoveryVerification: null, recoverySettlements: prior, reconciledAt: null, reconciliationNote: null, rootCause: null }
+  }
   return { ...state, recoveryStage: 'requested', recoveredAmount: null, recoveredVia: null, recoveryOutcomeNote: null, recoveryResolvedAt: null, recoveryVerification: null, recoverySettlements: null, reconciledAt: null, reconciliationNote: null, rootCause: null }
 }
 

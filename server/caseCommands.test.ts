@@ -5,8 +5,47 @@ import { openDatabase } from './db.ts'
 import { ProjectStore } from './projectStore.ts'
 import { CaseCommands } from './caseCommands.ts'
 import { authorizedProject } from './testProject.ts'
+import type { CaseState } from '../src/ledger/caseState.ts'
 
 describe('server case commands', () => {
+  it('archives a sent request and requires a separate review with a reduced ceiling', () => {
+    const db = openDatabase(':memory:')
+    db.prepare('INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)').run('alice', 'alice@example.test', 1)
+    const projects = new ProjectStore(db, null)
+    const commands = new CaseCommands(db, projects)
+    const { project, findingId } = authorizedProject('generations', { vendor: 'Acme', invoice: 'INV-1', amount: 100, requested: 100 })
+    const evidence = project.environment.result.findings[0].evidence
+    Object.assign(project.environment.caseStates[findingId], {
+      requiresRevalidation: true, decision: 'confirmed', recoveryStage: 'requested', recoveryRequestedAt: 100, legacyApprovedAt: 90,
+      recoverySettlements: [{ amount: 30, method: 'refund', source: 'manual', reference: 'OLD-30', settledAt: 101 }],
+    })
+    projects.upsert('alice', project)
+    const send = (type: string, input: unknown, expectedRevision: number, commandId = randomUUID()) =>
+      commands.execute('alice', 'alice@example.test', 'generations', { commandId, expectedRevision, findingId, type, input })
+    const archiveId = randomUUID()
+    const archived = send('begin_new_request_review', { acknowledged: true }, 1, archiveId)
+    expect(send('begin_new_request_review', { acknowledged: true }, 1, archiveId)).toMatchObject({ replayed: true, revision: 2 })
+    expect(() => send('begin_new_request_review', { acknowledged: true }, 1)).toThrow(/another device/i)
+    expect(() => commands.execute('bob', 'bob@example.test', 'generations', { commandId: randomUUID(), expectedRevision: 2, findingId, type: 'begin_new_request_review', input: { acknowledged: true } })).toThrow(/not in this account/i)
+    const state = (archived.project.environment as { caseStates: Record<string, CaseState> }).caseStates[findingId]
+    expect(state).toMatchObject({ activeRequestGeneration: 2, approvedAt: null, requestedAmount: null, decision: null })
+    expect(state.archivedRequests?.[0]).toMatchObject({ generation: 1, requestedAmount: 100, returnedAmountAtArchive: 30, legacyApprovedAt: 90 })
+    const pkg = { subject: 'New request', body: 'Please review.', recipientEmail: 'supplier@example.test', requestedAmount: 70, method: 'refund' }
+    expect(() => send('decision', { decision: 'confirmed', reason: 'Too early' }, 2)).toThrow(/fresh evidence/i)
+    expect(() => send('approve', { package: pkg, knownBeforeReclaim: false, knownBeforeNote: null }, 2)).toThrow()
+    send('evidence', evidence, 2)
+    send('decision', { decision: 'confirmed', reason: 'Reviewed again' }, 3)
+    expect(() => send('approve', { package: { ...pkg, requestedAmount: 71 }, knownBeforeReclaim: false, knownBeforeNote: null }, 4)).toThrow(/earlier returns/i)
+    send('approve', { package: pkg, knownBeforeReclaim: false, knownBeforeNote: null }, 4)
+    send('request', { requestedAmount: 70 }, 5)
+    const late = send('historical_settlement', { generation: 1, amount: 10, method: 'refund', source: 'manual', reference: 'OLD-LATE', settledAt: 102 }, 6)
+    const current = (late.project.environment as { caseStates: Record<string, CaseState> }).caseStates[findingId]
+    expect(current).toMatchObject({ activeRequestGeneration: 2, requestedAmount: 70, recoveredAmount: 40 })
+    expect(current.contactHold).toMatch(/earlier request/i)
+    expect(() => send('historical_settlement', { generation: 1, amount: 10, method: 'refund', source: 'manual', reference: 'OLD-LATE', settledAt: 102 }, 7)).toThrow(/already recorded/i)
+    db.close()
+  })
+
   it('quarantines existing approvals as legacy assertions without losing their history', () => {
     const db = openDatabase(':memory:')
     db.prepare('INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)').run('alice', 'alice@example.test', 1)

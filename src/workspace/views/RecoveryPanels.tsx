@@ -66,7 +66,10 @@ export function RecoveryRequestPanel({
   recommendation?: { method: RecoveryMethod; reason: string }
 }) {
   const gate = evaluateEligibility(finding)
-  const supportedAmount = (gate.potentialAmountMinor ?? 0) / 100
+  const previousReturned = (state.recoverySettlements ?? (state.recoveryVerification ? [state.recoveryVerification] : []))
+    .filter((entry) => (entry.requestGeneration ?? 1) !== (state.activeRequestGeneration ?? 1))
+    .reduce((sum, entry) => sum + entry.amount, 0)
+  const supportedAmount = Math.max(0, Math.round((gate.potentialAmountMinor ?? 0) - previousReturned * 100) / 100)
   const [upgrade, setUpgrade] = useState<string | null>(null)
   const canEdit = limits.fullLetters
   const [method, setMethod] = useState<RecoveryMethod>(state.requestedResolution ?? recommendation?.method ?? 'refund')

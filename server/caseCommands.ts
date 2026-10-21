@@ -4,7 +4,8 @@ import { z } from 'zod'
 import { HttpError } from './http.ts'
 import type { ProjectStore } from './projectStore.ts'
 import { confirmCase, markExpected, markNeedsInfo, reopenDecision, reopenOutcome, updateRecoveryPackage, withHistory, type CaseState, type RecoveryVerification, type VendorUpdate } from '../src/ledger/caseState.ts'
-import { approveRecovery, closeWithoutRecovery, recordEmailSent, recordFollowUpSent, recordVendorUpdate, reconcileRecovery, reopenRemainingBalance, setContactHold, setFollowUpAfterDays, setNextFollowUp, startRecoveryRequest, verifyRecovery } from '../src/recovery/model.ts'
+import { approveRecovery, beginNewRequestReview, closeWithoutRecovery, recordEmailSent, recordFollowUpSent, recordHistoricalSettlement, recordVendorUpdate, reconcileRecovery, reopenRemainingBalance, setContactHold, setFollowUpAfterDays, setNextFollowUp, startRecoveryRequest, verifyRecovery } from '../src/recovery/model.ts'
+import { activeReturned, validSettlements, verifiedReturned } from '../src/recovery/financials.ts'
 import { assertRecoveryEligible, evaluateEligibility, type RecoveryEvidence } from '../src/recovery/eligibility.ts'
 import type { Finding } from '../src/types.ts'
 
@@ -26,7 +27,7 @@ const commandSchema = z.object({
   commandId: z.uuid(),
   expectedRevision: z.number().int().nonnegative(),
   findingId: z.string().min(1).max(150),
-  type: z.enum(['decision', 'evidence', 'approve', 'approve_and_request', 'request', 'email_sent', 'followup_sent', 'followup_days', 'contact_hold', 'followup', 'vendor_update', 'settlement', 'close', 'reconcile', 'reopen', 'reopen_balance']),
+  type: z.enum(['decision', 'evidence', 'approve', 'approve_and_request', 'request', 'email_sent', 'followup_sent', 'followup_days', 'contact_hold', 'followup', 'vendor_update', 'settlement', 'historical_settlement', 'begin_new_request_review', 'close', 'reconcile', 'reopen', 'reopen_balance']),
   input: z.unknown(),
 })
 type Command = z.infer<typeof commandSchema>
@@ -61,13 +62,29 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
   let next: CaseState = prior
   let revisedFinding: Finding | null = null
   const all = (env.result?.findings ?? []).map((row) => factFinding(env, row.id)!).filter(Boolean)
+  const priorGeneration = prior.activeRequestGeneration ?? 1
+  const priorReturnedMinor = Math.round((verifiedReturned(prior) - activeReturned(prior)) * 100)
+  const checkNewAmount = (amount: number) => {
+    const gate = evaluateEligibility(finding, finding.evidence, all)
+    if (gate.potentialAmountMinor === null || Math.round(amount * 100) > gate.potentialAmountMinor - priorReturnedMinor) {
+      throw new Error('The request exceeds the evidence-supported amount remaining after earlier returns.')
+    }
+  }
   try {
     switch (cmd.type) {
       case 'decision': {
         if (prior.recoveryStage === 'requested' || prior.recoveryStage === 'recovered' || prior.recoveryStage === 'not_recovered') throw new Error('A sent request must be resolved before changing the review decision.')
         const data = parse(z.object({ decision: z.enum(['confirmed', 'needs_info', 'expected']), reason: text.nullable() }), cmd.input)
+        if (priorGeneration > 1 && prior.requiresRevalidation && data.decision === 'confirmed') throw new Error('Review fresh evidence before confirming a new request.')
         next = data.decision === 'confirmed' ? confirmCase(data.reason) : data.decision === 'needs_info' ? markNeedsInfo(data.reason) : markExpected(data.reason)
+        if (priorGeneration > 1) next = { ...next, activeRequestGeneration: priorGeneration, archivedRequests: prior.archivedRequests, recoverySettlements: prior.recoverySettlements, recoveredAmount: verifiedReturned(prior), legacyRecoveredAmount: prior.legacyRecoveredAmount, requiresRevalidation: prior.requiresRevalidation, history: prior.history }
         next.decidedAt = at
+        break
+      }
+      case 'begin_new_request_review': {
+        const data = parse(z.object({ acknowledged: z.literal(true) }), cmd.input)
+        if (!data.acknowledged) throw new Error('Review acknowledgement is required.')
+        next = beginNewRequestReview(prior, at)
         break
       }
       case 'evidence': {
@@ -93,6 +110,7 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
         const data = parse(z.object({ package: packageSchema, knownBeforeReclaim: z.boolean(), knownBeforeNote: text.nullable() }), cmd.input)
         if (prior.decision !== 'confirmed' || prior.recoveryStage !== 'confirmed') throw new Error('Review the case before approval.')
         assertRecoveryEligible(finding, all, data.package.requestedAmount)
+        checkNewAmount(data.package.requestedAmount)
         const approved = approveRecovery(updateRecoveryPackage(prior, { ...data.package, requestedResolution: data.package.method, requestedAmount: data.package.requestedAmount, recipientEmail: data.package.recipientEmail }), { at, knownBeforeReclaim: data.knownBeforeReclaim, knownBeforeNote: data.knownBeforeNote })
         next = cmd.type === 'approve_and_request' ? startRecoveryRequest(approved, data.package.requestedAmount, at, finding.dollarImpact) : approved
         break
@@ -100,6 +118,7 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
       case 'request': {
         const data = parse(z.object({ requestedAmount: money }), cmd.input)
         assertRecoveryEligible(finding, all, data.requestedAmount)
+        checkNewAmount(data.requestedAmount)
         if (Math.round((prior.requestedAmount ?? 0) * 100) !== Math.round(data.requestedAmount * 100)) throw new Error('The amount must match the approved request.')
         next = startRecoveryRequest(prior, data.requestedAmount, at, finding.dollarImpact)
         break
@@ -145,6 +164,21 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
         next = verifyRecovery(prior, data as RecoveryVerification)
         break
       }
+      case 'historical_settlement': {
+        const data = parse(z.object({ generation: z.number().int().positive(), amount: money, method, source: z.enum(['bank', 'accounting', 'document', 'manual']), reference: text.min(1).max(300), settledAt: z.number().finite().positive(), appliedToBill: text.optional() }), cmd.input)
+        if (data.settledAt > at + 60_000) throw new Error('A return cannot be dated in the future.')
+        const archived = prior.archivedRequests?.find((request) => request.generation === data.generation)
+        if (!archived) throw new Error('Select an archived request for this return.')
+        if ((data.method === 'credit' || data.method === 'offset') && !data.appliedToBill?.trim()) throw new Error('Enter the bill where the credit was applied.')
+        const key = `${data.method}|${data.reference.toLowerCase()}|${data.appliedToBill?.toLowerCase() ?? ''}`
+        if (Object.entries(states).some(([, state]) => validSettlements(state).some((entry) => `${entry.method}|${entry.reference.toLowerCase()}|${entry.appliedToBill?.toLowerCase() ?? ''}` === key))) throw new Error('This return reference was already recorded.')
+        const oldReturnedMinor = Math.round(validSettlements(prior).filter((entry) => (entry.requestGeneration ?? 1) === data.generation).reduce((sum, entry) => sum + entry.amount, 0) * 100)
+        if (Math.round(data.amount * 100) > Math.round((archived.requestedAmount ?? 0) * 100) - oldReturnedMinor) throw new Error('The return exceeds the remaining amount of the earlier request.')
+        const proof: RecoveryVerification = { amount: data.amount, method: data.method, source: data.source, reference: data.reference, settledAt: data.settledAt, appliedToBill: data.appliedToBill }
+        const gate = evaluateEligibility(finding, finding.evidence, all)
+        next = recordHistoricalSettlement(prior, data.generation, proof, gate.potentialAmountMinor === null ? 0 : gate.potentialAmountMinor / 100)
+        break
+      }
       case 'reconcile': {
         const data = parse(z.object({ note: text.min(1), rootCause: text }), cmd.input)
         next = reconcileRecovery(prior, { ...data, at })
@@ -156,6 +190,7 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
         break
       }
       case 'reopen': {
+        if (prior.requiresRevalidation && (prior.recoveryStage === 'recovered' || prior.recoveryStage === 'not_recovered')) throw new Error('Preserve the historical request before correcting its outcome.')
         next = prior.recoveryStage === 'recovered' || prior.recoveryStage === 'not_recovered' ? reopenOutcome(prior) : reopenDecision(prior)
         break
       }
