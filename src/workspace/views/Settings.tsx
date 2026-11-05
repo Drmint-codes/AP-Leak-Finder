@@ -23,7 +23,8 @@ const THEME_OPTIONS: Array<{ value: ThemeChoice; label: string }> = [
 ]
 
 interface SettingsViewProps {
-  env: LedgerEnvironment
+  /** Null before the first audit: the account settings still work, the audit's own parts are left out. */
+  env: LedgerEnvironment | null
   onClear: () => void
   /** Reopens onboarding with the answers already given, to change them. */
   onEditOnboarding?: () => void
@@ -34,10 +35,10 @@ interface SettingsViewProps {
 
 /** Account, appearance, legal, and the one destructive action — deliberately small. */
 export function SettingsView({ env, onClear, onEditOnboarding, theme, resolvedTheme, onThemeChange }: SettingsViewProps) {
-  const s = overviewSummary(env)
+  const s = env ? overviewSummary(env) : null
   const auth = useOptionalAuth()
   const user = auth?.user ?? null
-  const recovered = ladder(env).recovered
+  const recovered = env ? ladder(env).recovered : 0
 
   return (
     <>
@@ -118,15 +119,17 @@ export function SettingsView({ env, onClear, onEditOnboarding, theme, resolvedTh
                 {user?.onboardingProfile ? 'Edit answers' : 'Answer them'}
               </button>
             </li>
-            <li>
-              <div>
-                <div style={{ fontWeight: 500 }}>Dashboard tour</div>
-                <div className="wk-table-sub">A walk through every part of the sidebar and what each page is for.</div>
-              </div>
-              <button type="button" className="wk-btn" data-variant="outline" data-size="sm" onClick={() => window.dispatchEvent(new Event('reclaim:tour'))}>
-                Take the tour again
-              </button>
-            </li>
+            {env ? (
+              <li>
+                <div>
+                  <div style={{ fontWeight: 500 }}>Dashboard tour</div>
+                  <div className="wk-table-sub">A walk through every part of the sidebar and what each page is for.</div>
+                </div>
+                <button type="button" className="wk-btn" data-variant="outline" data-size="sm" onClick={() => window.dispatchEvent(new Event('reclaim:tour'))}>
+                  Take the tour again
+                </button>
+              </li>
+            ) : null}
           </ul>
         </div>
       </section>
@@ -163,7 +166,7 @@ export function SettingsView({ env, onClear, onEditOnboarding, theme, resolvedTh
 
       <AccountData />
 
-      <section className="wk-section">
+      {s ? <section className="wk-section">
         <h2 className="wk-display wk-h2">This audit's data</h2>
         <Facts
           rows={[
@@ -183,7 +186,7 @@ export function SettingsView({ env, onClear, onEditOnboarding, theme, resolvedTh
             Delete this audit
           </button>
         </div>
-      </section>
+      </section> : null}
     </>
   )
 }

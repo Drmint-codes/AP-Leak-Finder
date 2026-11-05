@@ -102,11 +102,13 @@ export function AuditApp() {
   const [limitDialog, setLimitDialog] = useState(false)
   const [onboardingRequested, setOnboardingRequested] = useState(false)
   const account = auth?.user && !auth.user.isGuest ? auth.user : null
-  // First run: the account (or guest tab) has not been through onboarding. Someone who
-  // arrived with a deliberate entry (`?entry=upload`, `?entry=sample`) came to do that
-  // first; onboarding waits for their next visit rather than standing in the way.
+  // Someone who arrived with a deliberate entry (`?entry=upload`, `?entry=sample`, `?sample=1`)
+  // came to do that first. Kept for the whole visit, since running it clears the entry from the route.
+  const [arrivedForAudit] = useState(() => route.entry !== null || new URLSearchParams(window.location.search).get('sample') === '1')
+  // First run: the account (or guest tab) has not been through onboarding. For an arrival
+  // like the above, onboarding waits for their next visit rather than standing in the way.
   const onboardingOpen =
-    onboardingRequested || (auth !== null && auth.status === 'ready' && auth.user !== null && !auth.user.onboardingSeenAt && route.entry === null)
+    onboardingRequested || (auth !== null && auth.status === 'ready' && auth.user !== null && !auth.user.onboardingSeenAt && !arrivedForAudit)
   const actor = account ? account.name || account.email : null
   const sender = useMemo<SenderProfile>(
     () => ({ businessName: account?.onboardingProfile?.businessName || account?.company || '', senderName: account?.name ?? '', senderEmail: account?.email ?? '' }),
@@ -693,7 +695,18 @@ export function AuditApp() {
           onOpenWorkspace={handleOpenProject}
           tourReady={false}
         >
-          <Launch onRunSample={runSampleAudit} onUseOwn={() => openImport('new')} running={running} note={entryError ?? undefined} showHeading={route.mode === 'dashboard'} />
+          {route.mode === 'settings' && !running && route.entry === null ? (
+            <SettingsView
+              onEditOnboarding={() => setOnboardingRequested(true)}
+              env={null}
+              onClear={() => {}}
+              theme={themeChoice}
+              resolvedTheme={resolvedTheme}
+              onThemeChange={chooseTheme}
+            />
+          ) : (
+            <Launch onRunSample={runSampleAudit} onUseOwn={() => openImport('new')} running={running} note={entryError ?? undefined} showHeading={route.mode === 'dashboard'} />
+          )}
         </WorkspaceShell>
         <UpgradeDialog
           open={limitDialog}

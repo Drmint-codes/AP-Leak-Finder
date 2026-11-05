@@ -244,6 +244,17 @@ describe('AuditApp', () => {
     expect(screen.getByRole('button', { name: /upload a ledger/i })).toBeInTheDocument()
   })
 
+  it('Settings works before the first audit, without the parts that need one', () => {
+    setLocation('/audit?mode=settings')
+    render(<AuditApp />)
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Settings')
+    expect(screen.getByRole('heading', { name: 'Legal' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /run the sample/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /delete this audit/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /take the tour again/i })).not.toBeInTheDocument()
+  })
+
   it('?entry=sample builds the ledger on its CTA and lands on the Dashboard with the engine’s real totals', async () => {
     setLocation('/audit?entry=sample')
     render(<AuditApp />)
