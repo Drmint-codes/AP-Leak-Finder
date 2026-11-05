@@ -116,11 +116,11 @@ export function Onboarding({ initial, revisit = false, onComplete }: OnboardingP
     moved.current = true
   }, [step])
 
-  const finish = async (next: OnboardingNext) => {
+  const finish = async (next: OnboardingNext, answers = profile) => {
     if (saving) return
     setSaving(true)
     try {
-      await onComplete(profile, next)
+      await onComplete(answers, next)
     } finally {
       setSaving(false)
     }
@@ -153,7 +153,7 @@ export function Onboarding({ initial, revisit = false, onComplete }: OnboardingP
             </span>
             Step {step + 1} of {total}
           </div>
-          <button type="button" className="onb-link" disabled={saving} onClick={() => void finish(null)}>
+          <button type="button" className="onb-link" disabled={saving} onClick={() => void finish(null, revisit ? initial : profile)}>
             {revisit ? 'Close' : 'Skip setup'}
           </button>
         </header>

@@ -21,6 +21,14 @@ describe('Onboarding', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveFocus()
   })
 
+  it('closing a reopened setup keeps the answers it started with', async () => {
+    const onComplete = vi.fn()
+    render(<Onboarding initial={{ ...emptyProfile(), role: 'owner' }} revisit onComplete={onComplete} />)
+    fireEvent.click(screen.getByRole('radio', { name: 'I run finance' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await waitFor(() => expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ role: 'owner' }), null))
+  })
+
   it('reopened from Settings it asks only the questions and ends in a save', async () => {
     const onComplete = vi.fn()
     render(<Onboarding initial={{ ...emptyProfile(), autonomy: 'show' }} revisit onComplete={onComplete} />)

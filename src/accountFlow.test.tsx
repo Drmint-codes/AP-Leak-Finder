@@ -38,8 +38,8 @@ function Gate() {
   )
 }
 
-function mountWorkspace() {
-  window.history.pushState({}, '', '/audit')
+function mountWorkspace(path = '/audit') {
+  window.history.pushState({}, '', path)
   return render(
     <AuthProvider>
       <Gate />
@@ -289,6 +289,21 @@ describe('onboarding and plans', () => {
     await screen.findByText(`ready:${carol.email}`)
     await screen.findByRole('button', { name: /upload a ledger/i })
     expect(screen.queryByTestId('onboarding')).not.toBeInTheDocument()
+  })
+
+  it('someone who arrives for the sample sees its results first; onboarding waits for their next visit', async () => {
+    const finn = { ...carol, firstName: 'Finn', email: 'finn@example.com' }
+    await registerViaApi(finn)
+    mountWorkspace('/audit?entry=sample')
+    await screen.findByText('ready:nobody')
+    await logIn(finn)
+    fireEvent.click(await screen.findByRole('button', { name: /run the sample/i }))
+    await screen.findByRole('heading', { name: 'Up next' })
+    expect(screen.queryByTestId('onboarding')).not.toBeInTheDocument()
+
+    cleanup()
+    mountWorkspace()
+    await screen.findByTestId('onboarding')
   })
 
   it('skipping onboarding is remembered too, with whatever was answered', async () => {
