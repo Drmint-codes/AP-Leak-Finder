@@ -158,15 +158,6 @@
   color: #171a17 !important;
 }
 
-.reclaim-commercial-page .reclaim-product-nav .reclaim-nav-mark .reclaim-mark path {
-  fill: currentColor !important;
-}
-
-.reclaim-commercial-page .reclaim-product-nav .reclaim-nav-mark .reclaim-mark g {
-  filter: none !important;
-  mask: none !important;
-}
-
 .reclaim-commercial-page .reclaim-product-nav .reclaim-nav-brand:hover .reclaim-nav-mark {
   transform: translate3d(0, -1px, 0);
   background: transparent;
@@ -1621,11 +1612,6 @@
 .reclaim-commercial-page .reclaim-product-nav[data-on-dark='true'] .reclaim-nav-mark .reclaim-mark-ink,
 .reclaim-main-v2 .motto-logo-lockup .reclaim-mark-ink {
   color: #171a17 !important;
-}
-
-.reclaim-commercial-page .reclaim-product-nav .reclaim-nav-mark .reclaim-mark-ink path,
-.reclaim-main-v2 .motto-logo-lockup .reclaim-mark-ink path {
-  fill: currentColor !important;
 }
 
 .reclaim-commercial-page .reclaim-product-nav .reclaim-nav-mark .reclaim-mark-dot,

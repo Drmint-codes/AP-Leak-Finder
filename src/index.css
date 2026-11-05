@@ -98,6 +98,19 @@ html[data-theme='light']:has(.wk) body {
   overflow: visible;
 }
 
+/* The mark's green splash: a flood that rises from the bottom while its link or button is hovered. */
+.reclaim-mark-splash {
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:is(a, button, .reclaim-mark-host):hover .reclaim-mark-splash {
+  clip-path: inset(-10% 0 0 0);
+  transition-duration: 1s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reclaim-mark-splash { transition: none; }
+}
+
 .reclaim-wordmark {
   color: var(--text, hsl(var(--foreground)));
   cursor: default;

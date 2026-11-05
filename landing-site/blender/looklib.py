@@ -32,10 +32,11 @@ def reset():
 def setup_render(res, spp, loop, A):
     sc = bpy.context.scene
     cp = bpy.context.preferences.addons['cycles'].preferences
-    cp.compute_device_type = 'OPTIX'
+    device = A.get('device', 'OPTIX')     # device=METAL on a Mac
+    cp.compute_device_type = device
     cp.get_devices()
     for d in cp.devices:
-        d.use = d.type == 'OPTIX'
+        d.use = d.type == device
     sc.render.engine = 'CYCLES'
     sc.cycles.device = 'GPU'
     sc.cycles.samples = spp

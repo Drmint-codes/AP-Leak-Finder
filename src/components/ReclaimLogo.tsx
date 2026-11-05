@@ -21,38 +21,50 @@ type ReclaimLogoProps = ReclaimMarkProps & {
  * future navbar collapse from “Reclaim.” into only the R without changing
  * the identity or its interaction model.
  */
+/** Geometry shared with the static copies (favicon, landing sprite): scripts/reclaim-mark.py writes those. */
+const MARK_VIEWBOX = '7 7 106 98'
+/** The R cut through the top slab, drawn on that slab's isometric face. */
+const MARK_R = 'M29 80V22h22a15.5 15.5 0 0 1 0 31H29m20 0 22 27'
+const MARK_FACE = 'M10 35 60 10l50 25-50 25Z'
+const MARK_BANDS = ['M10 45 60 70l50-25v4L60 74 10 49Z', 'M10 59 60 84l50-25v4L60 88 10 63Z', 'M10 73 60 98l50-25v4L60 102 10 77Z']
+const MARK_GREEN = '#00E487'
+
+/**
+ * Reclaim's mark: three stacked ledger slabs with the R cut through the top one and the
+ * recovered layer in green. The ink layers follow currentColor, so it reads on light and dark.
+ * With `splash`, hovering the nearest link or button floods it green from the bottom up.
+ */
+export function MarkGraphic({ className, size, ink = 'currentColor', splash = false }: { className?: string; size?: number; ink?: string; splash?: boolean }) {
+  const mask = `rm${useId().replace(/:/g, '')}`
+  const layers = (inkFill: string, greenFill: string) => [MARK_FACE, ...MARK_BANDS].map((d, i) => {
+    const fill = i === 2 ? greenFill : inkFill
+    return <path key={d} d={d} fill={fill} stroke={fill} />
+  })
+  return (
+    <svg aria-hidden="true" className={className} width={size} height={size} viewBox={MARK_VIEWBOX} fill="none">
+      <mask id={mask} maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120">
+        <rect width="120" height="120" fill="#fff" />
+        <path transform="matrix(.5 -.25 .5 .25 10 35)" d={MARK_R} fill="none" stroke="#000" strokeWidth="17" strokeLinecap="round" strokeLinejoin="round" />
+      </mask>
+      <g strokeWidth="5" strokeLinejoin="round" mask={`url(#${mask})`}>
+        {layers(ink, MARK_GREEN)}
+        {splash ? <g className="reclaim-mark-splash">{layers('var(--reclaim-splash, #00fd74)', 'var(--reclaim-splash, #00fd74)')}</g> : null}
+      </g>
+    </svg>
+  )
+}
+
 export function ReclaimMark({ size = 40, interactive = false, className = '', tone = 'auto' }: ReclaimMarkProps) {
   const [isActive, setIsActive] = useState(false)
-  const accentId = useId().replace(/:/g, '')
-  const inkColor = tone === 'ink' ? '#171717' : 'currentColor'
 
   return (
     <span
       className={`inline-flex ${className}`}
+      data-active={isActive}
       onMouseEnter={interactive ? () => setIsActive(true) : undefined}
       onMouseLeave={interactive ? () => setIsActive(false) : undefined}
     >
-      <svg
-        aria-hidden="true"
-        className="reclaim-mark"
-        data-active={isActive}
-        width={size}
-        height={size}
-        viewBox="0 0 48 48"
-        fill="none"
-      >
-        <defs>
-          <linearGradient id={accentId} x1="26.7" y1="33" x2="38" y2="39" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#58D783" />
-            <stop offset="1" stopColor="#79D99B" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M13 39V9h11.3c6.7 0 10.7 3.4 10.7 9.2 0 4.25-2.15 7.15-5.85 8.42L38 39h-7.1l-7.8-11.35H19.4V39H13Zm6.4-16.42h4.25c3.15 0 4.95-1.5 4.95-4.12 0-2.68-1.8-4.12-4.95-4.12H19.4v8.24Z"
-          fill={inkColor}
-        />
-        <path className="reclaim-spread" d="M26.74 32.94 30.9 39H38l-4.01-5.6-7.25-.46Z" fill={`url(#${accentId})`} />
-      </svg>
+      <MarkGraphic className="reclaim-mark" size={size} ink={tone === 'ink' ? '#171717' : 'currentColor'} splash />
     </span>
   )
 }
