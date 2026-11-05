@@ -1,4 +1,5 @@
 import { PLAN_LABEL, planOf } from '@/lib/plans'
+import { MarkGraphic } from '@/components/ReclaimLogo'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   ArrowRight,
@@ -48,18 +49,13 @@ export interface WorkspaceShellProps {
   /** Set on a finding's page: the page draws its own header, the crumb shows the finding. */
   finding?: string | null
   actions?: ReactNode
+  /** False while there is no audit to walk through, so the tour waits for the first one. */
+  tourReady?: boolean
   children: ReactNode
 }
 
-export function Mark() {
-  return <svg viewBox="-13 -11.5 26 23" aria-hidden="true">
-    <path d="M-2.056,-4.6 L-5.751,-11 L5.751,-11 L2.056,-4.6 Z" />
-    <path d="M2.956,-4.081 L6.651,-10.481 L12.402,-0.520 L5.012,-0.520 Z" />
-    <path d="M5.012,0.520 L12.402,0.520 L6.651,10.481 L2.956,4.081 Z" />
-    <path d="M2.056,4.6 L5.751,11 L-5.751,11 L-2.056,4.6 Z" />
-    <path d="M-2.956,4.081 L-6.651,10.481 L-12.402,-0.520 L-5.012,-0.520 Z" />
-    <path d="M-5.012,-0.520 L-12.402,-0.520 L-6.651,-10.481 L-2.956,-4.081 Z" />
-  </svg>
+export function Mark({ splash = true }: { splash?: boolean }) {
+  return <MarkGraphic splash={splash} />
 }
 
 /** True when a keystroke belongs to a field, so single-key shortcuts leave it alone. */
@@ -91,7 +87,7 @@ export function WorkspaceShell(props: WorkspaceShellProps) {
   )
 }
 
-function Shell({ mode, onModeChange, auditCount, findingCount, recoveryCount, workspaceLabel, workspaceId, availableWorkspaces, onOpenWorkspace, searchableFindings = [], onOpenFinding, title, finding = null, actions, children }: WorkspaceShellProps) {
+function Shell({ mode, onModeChange, auditCount, findingCount, recoveryCount, workspaceLabel, workspaceId, availableWorkspaces, onOpenWorkspace, searchableFindings = [], onOpenFinding, title, finding = null, actions, tourReady = true, children }: WorkspaceShellProps) {
   const auth = useOptionalAuth()
   const user = auth?.user ?? null
   const { prefs, update, theme, setTheme } = usePreferences()
@@ -202,7 +198,7 @@ function Shell({ mode, onModeChange, auditCount, findingCount, recoveryCount, wo
         <div className="wk-crumbs">
           <div className="wk-switcher" ref={switcher} data-tour="switcher">
             <button type="button" className="wk-switcher-btn" aria-expanded={switcherOpen} onClick={() => setSwitcherOpen((open) => !open)} aria-label={`Current audit: ${workspaceLabel}. Choose an audit`}>
-              <span className="wk-switcher-icon"><Mark /></span><span>{workspaceLabel}</span><ChevronDown aria-hidden="true" />
+              <span className="wk-switcher-icon"><Mark splash={false} /></span><span>{workspaceLabel}</span><ChevronDown aria-hidden="true" />
             </button>
             {switcherOpen ? <div className="wk-menu">
               <span className="wk-label wk-menu-label">Audits</span>
@@ -229,7 +225,7 @@ function Shell({ mode, onModeChange, auditCount, findingCount, recoveryCount, wo
       </main>
     </div>
     <CustomizeSheet open={customizeOpen} onOpenChange={setCustomizeOpen} />
-    {user ? <WorkspaceTour mode={mode} caseOpen={finding !== null} onModeChange={onModeChange} onMobileNav={setMobileNavOpen} /> : null}
+    {user ? <WorkspaceTour mode={mode} caseOpen={finding !== null} onModeChange={onModeChange} onMobileNav={setMobileNavOpen} autoStart={tourReady ? undefined : false} /> : null}
     {findOpen ? <div className="wk-command-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeFind() }}><section className="wk-command" role="dialog" aria-modal="true" aria-labelledby="wk-command-title">
       <h2 id="wk-command-title" className="wk-sr-only">Find in workspace</h2><div className="wk-command-input-row"><Search aria-hidden="true" /><input ref={findInput} type="search" value={findQuery} onChange={(event) => { setFindQuery(event.target.value); setActiveIndex(0) }} placeholder="Find a page, vendor or finding…" aria-label="Find pages or findings" /><button type="button" className="wk-icon-btn" aria-label="Close search" onClick={closeFind}><X aria-hidden="true" /></button></div>
       <div className="wk-command-results"><span className="wk-label wk-command-caption">{query ? 'Results' : 'Go to'}</span>{results.length ? results.map((result, index) => { const Icon = result.icon; return <button key={result.key} type="button" className="wk-command-result" data-active={index === activeIndex || undefined} onMouseEnter={() => setActiveIndex(index)} onClick={() => { result.open(); closeFind() }}><Icon aria-hidden="true" /><span><strong>{result.label}</strong><small>{result.detail}</small></span>{index === activeIndex ? <CornerDownLeft aria-hidden="true" /> : null}</button> }) : <p className="wk-command-empty">Nothing matches “{findQuery}”</p>}</div>

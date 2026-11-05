@@ -193,7 +193,7 @@ html[data-theme='light'] .wk {
    nav's current destination and money that came back wear the green. */
 .wk-brand { display: flex; align-items: center; gap: 9px; padding: 0 10px; height: 33px; transition: color .14s ease; }
 .wk-brand:hover { color: var(--accent-ink); }
-.wk-brand svg { width: 23px; height: 23px; flex: none; fill: currentColor; overflow: visible; }
+.wk-brand svg { width: 27px; height: 27px; flex: none; overflow: visible; }
 .wk-brand b { font-family: var(--f-text); font-size: 22px; font-weight: 650; font-stretch: 100%; letter-spacing: -0.045em; }
 .wk-nav { display: flex; flex-direction: column; gap: 2px; }
 .wk-nav-group { margin-top: 16px; padding: 0 10px 8px; }
@@ -650,7 +650,7 @@ html[data-theme='light'] .wk {
 .wk-auth { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; }
 .wk-auth-header { display: flex; align-items: center; justify-content: space-between; padding: 22px var(--gutter); }
 .wk-auth-header a { display: inline-flex; align-items: center; gap: 9px; font-weight: 650; font-size: 16px; letter-spacing: -0.02em; }
-.wk-auth-header svg { width: 22px; height: 22px; fill: currentColor; overflow: visible; }
+.wk-auth-header svg { width: 26px; height: 26px; overflow: visible; }
 .wk-auth-header .wk-auth-alt { font-size: 13px; color: var(--text-dim); font-weight: 500; }
 .wk-auth-header .wk-auth-alt a { display: inline; color: var(--accent-ink); font-size: 13px; }
 .wk-auth-main { display: grid; place-items: start center; padding: 24px var(--gutter) 64px; }

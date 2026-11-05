@@ -1,19 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type MouseEvent, type ReactNode } from 'react'
 import '@/pages/authSplit.css'
-
-/** Safari plays WebM but drops its alpha, so it gets the loop baked over the page's white. */
-const SAFARI = /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent)
-const HERO_SRC = SAFARI ? '/media/hero-white.mp4' : '/media/hero.webm'
-
-/** The six kites of the Reclaim hexagon, as the marketing site's #hx-wheel symbol. */
-const WHEEL = [
-  'M-2.056,-4.6 L-5.751,-11 L5.751,-11 L2.056,-4.6 Z',
-  'M2.956,-4.081 L6.651,-10.481 L12.402,-0.520 L5.012,-0.520 Z',
-  'M5.012,0.520 L12.402,0.520 L6.651,10.481 L2.956,4.081 Z',
-  'M2.056,4.6 L5.751,11 L-5.751,11 L-2.056,4.6 Z',
-  'M-2.956,4.081 L-6.651,10.481 L-12.402,0.520 L-5.012,0.520 Z',
-  'M-5.012,-0.520 L-12.402,-0.520 L-6.651,-10.481 L-2.956,-4.081 Z',
-]
+import { MarkGraphic } from '@/components/ReclaimLogo'
 
 const calm = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
@@ -62,7 +49,7 @@ interface AuthSplitProps {
 
 /**
  * The log-in and sign-up pages, set in the marketing site's system: the hero's
- * 3D loop on white (60%), and the black rounded section that follows the hero,
+ * 3D loop on its paper (60%), and the black rounded section that follows the hero,
  * turned on its side (40%). It fades in like the site's pages, and fades out
  * before following any of its own links.
  */
@@ -109,20 +96,14 @@ export function AuthSplit({ title, titleSize, lede, alternate, children }: AuthS
     <div className="rc-login" ref={root} onClick={handleLinkClick}>
       <div className="rc-login-stage">
         <div className="rc-login-reel" aria-hidden="true">
-          <video ref={reel} src={HERO_SRC} autoPlay loop muted playsInline preload="auto" />
+          <video ref={reel} poster="/media/hero/first.webp?v=stack1" autoPlay loop muted playsInline preload="auto">
+            <source src="/media/hero/m.mp4?v=stack1" type="video/mp4" media="(max-width: 767px)" />
+            <source src="/media/hero/d.mp4?v=stack1" type="video/mp4" />
+          </video>
         </div>
         <header className="rc-login-top">
           <a href="/" className="rc-logo" aria-label="Reclaim home">
-            <svg viewBox="-13 -11.5 26 23" fill="currentColor" aria-hidden="true">
-              {WHEEL.map((d) => (
-                <path key={d} d={d} />
-              ))}
-              <g className="fill">
-                {WHEEL.map((d) => (
-                  <path key={d} d={d} />
-                ))}
-              </g>
-            </svg>
+            <MarkGraphic splash />
             <span>Reclaim</span>
           </a>
         </header>

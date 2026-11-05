@@ -384,11 +384,11 @@
   // (reduced motion: the logo fades in where it stands)
   const logoReset = logo => {
     if (calm) { gsap.set(logo, { opacity: 0 }); return; }
-    gsap.set($('.wheel', logo), { scale: 0, rotation: 216, transformOrigin: '50% 50%' });
+    gsap.set($('.wheel', logo), { scale: .6, yPercent: -40, opacity: 0, transformOrigin: '50% 100%' });
     gsap.set($$('.letter', logo), { xPercent: 50, yPercent: 150 });
   };
   const logoIn = logo => calm ? gsap.to(logo, { opacity: 1, duration: .5 }) : gsap.timeline({ defaults: { duration: 1, ease: 'power2.out' } })
-    .to($('.wheel', logo), { scale: 1, rotation: 0 }, 0)
+    .to($('.wheel', logo), { scale: 1, yPercent: 0, opacity: 1 }, 0)
     .to($$('.letter', logo), { xPercent: 0, yPercent: 0, stagger: .1 }, .1);
   const navLogos = $$('.the-nav .hx-logo');
   const footLogo = $('.the-footer .hx-logo');
@@ -398,14 +398,14 @@
     ScrollTrigger.create({ trigger: '.the-footer', start: 'top 80%', onEnter: () => logoIn(footLogo), onLeaveBack: () => logoReset(footLogo) });
   }
 
-  // hover: the hexagon fills with green like water. A green copy of the wheel is clipped
-  // by a wave (period 13, amplitude 2, wheel units) that drifts sideways while its level rises.
+  // hover: the mark floods with green like water. A one-colour copy of the mark is clipped
+  // by a wave (period 13, amplitude 2, in the logo's 26 x 23 units) that drifts sideways while its level rises.
   const WAVE = 'M-26 0Q-22.75-4-19.5 0T-13 0T-6.5 0T0 0T6.5 0T13 0T19.5 0T26 0T32.5 0T39 0T45.5 0T52 0V60H-26Z';
   $$('.hx-logo').forEach((logo, i) => {
     const wheel = $('.wheel', logo);
-    wheel.insertAdjacentHTML('beforeend', `<clipPath id="hx-water-${i}"><path class="water" d="${WAVE}"/></clipPath><g clip-path="url(#hx-water-${i})"><use class="fill" href="#hx-wheel"/></g>`);
+    wheel.insertAdjacentHTML('beforeend', `<clipPath id="hx-water-${i}"><path class="water" d="${WAVE}"/></clipPath><g clip-path="url(#hx-water-${i})"><use class="fill" href="#hx-wheel-solid"/></g>`);
     const water = $('.water', wheel);
-    gsap.set(water, { x: 0, y: 26 });   // empty: crest sits below the wheel
+    gsap.set(water, { x: 0, y: 26 });   // empty: crest sits below the mark
     const drift = gsap.to(water, { x: -13, duration: 1.2, ease: 'none', repeat: -1, paused: true });
     let level;
     logo.addEventListener('pointerenter', e => {

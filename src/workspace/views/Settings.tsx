@@ -111,12 +111,8 @@ export function SettingsView({ env, onClear, onEditOnboarding, theme, resolvedTh
           <ul className="wk-list">
             <li>
               <div>
-                <div style={{ fontWeight: 500 }}>Onboarding answers</div>
-                <div className="wk-table-sub">
-                  {user?.onboardingProfile
-                    ? 'What you want back, your tools and how hands-on Reclaim should be. Change any of it.'
-                    : 'The eight questions from your first visit: what you want back, your tools, how hands-on Reclaim should be.'}
-                </div>
+                <div style={{ fontWeight: 500 }}>Setup answers</div>
+                <div className="wk-table-sub">Your business, where your payments live and how much Reclaim should do.</div>
               </div>
               <button type="button" className="wk-btn" data-variant="outline" data-size="sm" onClick={onEditOnboarding}>
                 {user?.onboardingProfile ? 'Edit answers' : 'Answer them'}

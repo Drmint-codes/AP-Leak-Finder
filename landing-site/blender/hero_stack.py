@@ -353,7 +353,8 @@ def film():
         return tuple(round(v, 5) for tt in (t - half, t, t + half) for v in gaps(tt) + slid(tt))
 
     last, last_path, made, copied = None, None, 0, 0
-    for f in range(1, n + 1):
+    first, end = (int(x) for x in A.get('span', f'1-{n}').split('-'))   # span=163-328: only part of the loop
+    for f in range(first, end + 1):
         path = os.path.join(OUT, f'f_{f:04d}.png')
         s = sig(f)
         if os.path.exists(path) and A.get('overwrite') != '1':
