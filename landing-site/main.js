@@ -793,3 +793,17 @@
   };
   boot();
 })();
+
+// How It Works: the one MacBook's screen follows whichever step is in the middle of the window
+(() => {
+  const steps = document.querySelectorAll('.hiw-step[data-step]');
+  const slides = document.querySelectorAll('.hiw-slide');
+  if (!steps.length) return;
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      slides.forEach((slide) => slide.classList.toggle('is-on', slide.dataset.slide === e.target.dataset.step));
+    }
+  }, { rootMargin: '-45% 0px -45% 0px' });
+  steps.forEach((step) => io.observe(step));
+})();

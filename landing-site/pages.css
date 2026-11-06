@@ -943,3 +943,75 @@ pre.code .hl { background: var(--cl-reclaim); color: var(--cl-black); }
 [data-template="security"] main .item .desc.type-body-xs { font-size: 1.6rem; }
 [data-template="security"] main .richtext p { font-size: 1.8rem; }
 [data-template="security"] main .item .label.type-h6 { font-size: 2rem; }
+
+/* ---------- How It Works: the ledger, four parts, then one MacBook that explains each step as you scroll ---------- */
+.hiw-hero { min-height: 0; justify-content: flex-start; padding-bottom: 2.4rem; }
+.hiw-hero .content { align-items: center; row-gap: 3.2rem; }
+.hiw-hero-copy { grid-column: 1 / span 6; }
+.hiw-hero-copy .type-body-large { max-width: 56rem; margin-top: 3.2rem; }
+.hiw-logo { grid-column: 7 / span 6; aspect-ratio: 1 / 1; }
+.hiw-logo video, .hiw-model video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.hiw-parts { position: relative; padding-block: 2.4rem 8rem; background: var(--cl-bg1); color: var(--cl-color1); }
+.hiw-parts-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3.2rem; width: var(--grid-width); margin-inline: auto; }
+.hiw-part { display: flex; flex-direction: column; gap: .8rem; padding-top: 1.6rem; border-top: 1px solid var(--cl-grey-400); transition: opacity .25s ease; }
+.hiw-part:hover { opacity: .65; }
+.hiw-part .hiw-model { aspect-ratio: 1 / 1; margin-bottom: .8rem; }
+.hiw-part .type-mono { color: var(--cl-grey-600); }
+.hiw-part strong { font-family: var(--font-display); font-size: 2.8rem; font-weight: 600; letter-spacing: -.03em; }
+.hiw-part small { color: var(--cl-grey-600); font-size: 1.6rem; line-height: 1.35; }
+.hiw-process { position: relative; background: var(--cl-black); color: var(--cl-white); }
+.hiw-process-grid { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 4.8rem; width: var(--grid-width); margin-inline: auto; }
+.hiw-mac-wrap { position: sticky; top: 0; display: flex; align-items: center; height: 100dvh; padding-top: var(--nav-height); }
+.hiw-mac { position: relative; width: 100%; margin: 0; aspect-ratio: 3840 / 2500; overflow: hidden; }
+.hiw-mac-body { display: block; width: 100%; height: auto; -webkit-mask-image: linear-gradient(#000 62%, transparent 74%); mask-image: linear-gradient(#000 62%, transparent 74%); }
+/* the screen's box is the render's measured corners; the slides size off it, so they scale with the laptop */
+.hiw-mac-screen { position: absolute; left: 16.438%; top: 11.05%; width: 67.124%; height: 68.44%; overflow: hidden; container-type: size; border-radius: 1.2% 1.2% 0 0 / 1.8% 1.8% 0 0; background: var(--cl-white); color: var(--cl-black); }
+.hiw-slide { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 5cqw 6cqw; opacity: 0; transform: translateY(1.5cqw); transition: opacity .45s ease, transform .45s ease; }
+.hiw-slide.is-on { opacity: 1; transform: none; }
+.hs-kicker { font-family: var(--font-mono); font-size: 1.5cqw; color: var(--cl-grey-500); }
+.hs-title { margin-top: 1.6cqw; font-family: var(--font-display); font-size: 6.2cqw; font-weight: 600; line-height: 1.02; letter-spacing: -.04em; }
+.hs-art { display: flex; flex: 1; align-items: center; justify-content: center; min-height: 0; }
+.hs-art > * { zoom: 1.35; }
+.hs-note { color: var(--cl-grey-600); font-size: 3cqw; }
+.hs-art ul, .hs-art ol { margin: 0; padding: 0; list-style: none; }
+.hs-file, .hs-mail { position: relative; display: grid; gap: 1.2cqw; width: 46cqw; padding: 2.6cqw; border: .2cqw solid var(--cl-grey-300); border-radius: 1.6cqw; background: var(--cl-grey-100); font-size: 2.2cqw; }
+.hs-file i, .hs-mail i { display: block; height: 1cqw; border-radius: 1cqw; background: var(--cl-grey-300); }
+.hs-file i:last-of-type, .hs-mail i:last-of-type { width: 55%; }
+.hs-file em, .hs-mail em { justify-self: start; margin-top: .8cqw; padding: .9cqw 2cqw; border-radius: 1cqw; background: var(--cl-reclaim); font-size: 1.9cqw; font-style: normal; font-weight: 500; }
+.hs-rows { display: grid; gap: 1cqw; width: 54cqw; font-size: 2.3cqw; }
+.hs-rows li { display: flex; align-items: center; gap: 1.4cqw; padding: 1.3cqw 2cqw; border: .2cqw solid var(--cl-grey-200); border-radius: 1.2cqw; }
+.hs-rows i { width: 1.4cqw; height: 1.4cqw; border-radius: 50%; background: var(--cl-grey-400); }
+.hs-rows .flag { border-color: var(--cl-leak); background: var(--cl-leak-2); font-weight: 500; }
+.hs-rows .flag i { background: var(--cl-leak); }
+.hs-pair { display: grid; gap: 1.2cqw; width: 58cqw; font-size: 2.6cqw; }
+.hs-pair li { display: flex; align-items: center; justify-content: space-between; padding: 2cqw 2.4cqw; border: .2cqw solid var(--cl-grey-200); border-radius: 1.2cqw; }
+.hs-pair mark { padding: .4cqw 1.2cqw; border-radius: .8cqw; background: var(--cl-green-2); color: inherit; font-weight: 500; }
+.hs-check { display: grid; gap: 1.4cqw; font-size: 3cqw; }
+.hs-check li { display: flex; align-items: center; gap: 1.6cqw; }
+.hs-check li::before { content: ''; width: 2.6cqw; height: 2.6cqw; border-radius: 50%; background: var(--cl-black); box-shadow: inset 0 0 0 .75cqw var(--cl-reclaim); }
+.hs-line { position: relative; display: flex; gap: 8cqw; font-size: 2.3cqw; }
+.hs-line li { display: grid; gap: 1.2cqw; justify-items: center; color: var(--cl-grey-500); }
+.hs-line li::before { content: ''; width: 3cqw; height: 3cqw; border-radius: 50%; background: var(--cl-grey-300); }
+.hs-line .on { color: var(--cl-black); font-weight: 500; }
+.hs-line .on::before { background: var(--cl-reclaim); box-shadow: 0 0 0 1cqw rgb(0 253 116 / .25); }
+.hiw-step { display: flex; flex-direction: column; justify-content: center; min-height: 80dvh; scroll-margin-top: 10vh; }
+.hiw-step:first-child { margin-top: 10dvh; }
+.hiw-step:last-child { margin-bottom: 10dvh; }
+.hiw-step .hiw-num { margin-bottom: 1.6rem; color: var(--cl-reclaim); }
+.hiw-step .type-h3 { font-size: 4rem; line-height: 1.05; }
+.hiw-step .type-body-large { margin-top: 2rem; color: var(--cl-grey-400); }
+.hiw-step a { text-decoration: underline; text-underline-offset: .3rem; }
+
+@media (max-width: 1023px) {
+  .hiw-hero-copy, .hiw-logo { grid-column: 1 / -1; }
+  .hiw-logo { width: min(100%, 44rem); margin-inline: auto; }
+  .hiw-parts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.4rem 1.6rem; }
+  /* the laptop stays pinned at the top of the screen while the steps scroll under it */
+  .hiw-process-grid { display: block; }
+  .hiw-mac-wrap { top: var(--nav-height); z-index: 1; height: auto; padding-top: 1.6rem; background: var(--cl-black); }
+  .hiw-mac { width: 124%; flex: none; margin-inline: -12%; }
+  .hiw-step { min-height: 60dvh; justify-content: flex-start; padding-top: 3.2rem; scroll-margin-top: 45vw; }
+  .hiw-step:first-child { margin-top: 0; }
+  .hiw-step .type-h3 { font-size: 3.2rem; }
+}
+@media (prefers-reduced-motion: reduce) { .hiw-slide { transition: none; transform: none; } }
