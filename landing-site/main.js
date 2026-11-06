@@ -807,3 +807,61 @@
   }, { rootMargin: '-45% 0px -45% 0px' });
   steps.forEach((step) => io.observe(step));
 })();
+
+// What It Checks: pick a check to see what it catches. Below 1024px, or without this, every check shows in order.
+(() => {
+  const grid = document.querySelector('.wc-explorer-grid');
+  if (!grid) return;
+  const tabs = [...grid.querySelectorAll('.wc-tab')];
+  const panels = [...grid.querySelectorAll('.wc-panel')];
+  grid.classList.add('is-live');
+  const show = (id) => {
+    if (!panels.some((panel) => panel.id === id)) return false;
+    panels.forEach((panel) => panel.classList.toggle('is-on', panel.id === id));
+    tabs.forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.target === id)));
+    return true;
+  };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => {
+      show(tab.dataset.target);
+      history.replaceState(null, '', `#${tab.dataset.target}`);
+    });
+    tab.addEventListener('keydown', (e) => {
+      const step = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      const next = tabs[(i + step + tabs.length) % tabs.length];
+      next.focus();
+      next.click();
+    });
+  });
+  const fromHash = () => {
+    if (!show(location.hash.slice(1))) return;
+    if (matchMedia('(min-width: 1024px)').matches) document.getElementById('checks').scrollIntoView({ behavior: 'smooth' });
+  };
+  addEventListener('hashchange', fromHash);
+  fromHash();
+})();
+
+// Pricing: what Growth and Flat would each cost for a month's recoveries. Keep in step with server/plans.ts.
+(() => {
+  const box = document.querySelector('[data-pr-calc]');
+  if (!box) return;
+  const input = box.querySelector('input');
+  const money = (n) => `$${Math.round(n).toLocaleString('en-US')}`;
+  const cell = (plan) => box.querySelector(`[data-pr-plan="${plan}"]`);
+  const update = () => {
+    const back = Number(input.value);
+    const growth = 15 + back * 0.1;
+    const flat = 50;
+    box.querySelector('[data-pr-amount]').textContent = money(back);
+    cell('growth').querySelector('[data-pr-cost]').textContent = money(growth);
+    cell('growth').classList.toggle('is-less', growth < flat);
+    cell('flat').classList.toggle('is-less', flat < growth);
+    box.querySelector('[data-pr-note]').textContent = growth === flat
+      ? 'At $350 a month, they cost the same.'
+      : `${growth < flat ? 'Growth' : 'Flat'} saves you ${money(Math.abs(growth - flat))} that month.`;
+  };
+  input.addEventListener('input', update);
+  update();
+})();
