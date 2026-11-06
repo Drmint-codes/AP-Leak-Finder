@@ -15,6 +15,7 @@ Chrome/Firefox/Edge, plus an H.264 MP4 with the section colour baked in for Safa
 | `compare.py` | side-by-side sheet vs reference frames (`path@x0,y0,x1,y1` crops) |
 | `onboardlib.py` | onboarding substance: black clay, cream paper and ruled ledger stock, one glossy green, brass; the Reclaim mark as geometry |
 | `onboarding.py` | the app's onboarding loops (`scene=welcome\|business\|tools\|how\|data\|finale_in\|finale\|ic_*\|card_*`); `card_*` are the two ledger-choice cards on Launch |
+| `render_hiw.sh` | the How It Works page: its logo (`hero_stack.py` with `logo=1`, the stack in ink and green with the R on its lid) and four step models (`hiw_models.py`), shipped to `../media/hiw/` |
 | `render_onboarding.sh` | renders every onboarding loop and ships it to `public/onboarding/` (WebM + dark/light MP4 + poster) |
 | `poster.py` | first frame as a transparent WebP (`<video poster>`, reduced motion) |
 | `grid.py` | contact sheet of frames at any aspect, for reviewing a batch at once |

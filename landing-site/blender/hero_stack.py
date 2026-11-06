@@ -224,9 +224,24 @@ def cutter(o, at, groove=GROOVE):
     o.data.materials.append(groove)                       # the faces it cuts take this (a shade under the stone)
 
 
-tl = .2 * D
-title, _ = K.prism('title', rrect(.16, tl, .025, 6), .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)
-cutter(title, (-W / 2 + .2 * W, -D / 2 + .17 * D + tl / 2, hl / 2), POCKET)
+if A.get('logo') == '1':
+    # the Reclaim mark's version of this stack: its R (scripts/reclaim-mark.py, stroked on a 100 unit face) where
+    # the title goes. The face's x runs along the rows (+y), its y down the page (+x)
+    size = float(A.get('rsize', .38)) * W
+    half = 8.5 / 100 * size
+    arc = [(51 + 15.5 * math.sin(math.radians(a)), 37.5 - 15.5 * math.cos(math.radians(a))) for a in range(15, 181, 15)]
+    for p, path in enumerate(([(29, 80), (29, 22), (51, 22)] + arc + [(29, 53)], [(49, 53), (71, 80)])):
+        pts = [Vector(((v - 51) / 100 * size, (u - 50) / 100 * size)) for u, v in path]
+        for q, (a, c) in enumerate(zip(pts, pts[1:])):
+            d = c - a
+            ext = d.length / 2 + half * .12
+            o, _ = K.prism(f'r{p}_{q}', [Vector((-ext, -half)), Vector((ext, -half)), Vector((ext, half)), Vector((-ext, half))], .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)
+            o.rotation_euler = (0, 0, math.atan2(d.y, d.x))
+            cutter(o, (-W / 2 + .215 * W + (a.x + c.x) / 2, -D / 2 + .3 * D + (a.y + c.y) / 2, hl / 2))
+else:
+    tl = .2 * D
+    title, _ = K.prism('title', rrect(.16, tl, .025, 6), .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)
+    cutter(title, (-W / 2 + .2 * W, -D / 2 + .17 * D + tl / 2, hl / 2), POCKET)
 y0, rr = -D / 2 + .18 * D, float(A.get('line', .016))
 for k in range(6):
     L = (.68 if k < 5 else .19) * D
