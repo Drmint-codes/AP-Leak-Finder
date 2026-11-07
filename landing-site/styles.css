@@ -930,7 +930,8 @@ img, video, canvas, svg { display: block; max-width: 100%; }
 
 /* ---------- closing: the one stack put right, one action, the three promises under it ---------- */
 .closing { padding-block: 12rem 20rem; text-align: center; }
-.closing-object { display: block; width: 38rem; height: auto; margin: 0 auto 1.2rem; }
+.closing-object { display: block; width: 40rem; height: auto; margin: 0 auto 1.2rem; }
+video.closing-object { aspect-ratio: 1116 / 622; object-fit: contain; }
 .closing .heading, .closing .heading .line-wrap { margin-inline: auto; }
 .closing-lede { max-width: 62rem; margin: 2.8rem auto 0; color: var(--cl-grey-500); font-size: 2.2rem; font-weight: 500; letter-spacing: -.02em; line-height: 1.35; }
 .closing-actions { display: flex; align-items: center; justify-content: center; gap: 2.8rem; margin-top: 4rem; }

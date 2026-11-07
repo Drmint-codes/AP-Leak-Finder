@@ -5,14 +5,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How Often Payments Go Out Wrong — Reclaim</title>
-<meta name="description" content="APQC puts duplicate or erroneous payments at 1.5% of disbursements at the median organization. Ardent Partners puts the invoice exception rate at 18.4%. What each number measures, and what it does not.">
+<meta name="description" content="APQC puts duplicate or erroneous payments at 1.5% of disbursements. Ardent Partners puts invoice exceptions at 18.4%. What each number measures, and what it can't tell you.">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:ital,wght@0,400..800;1,400..800&display=block" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11.2.6/swiper-bundle.min.css">
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/pages.css">
 <script>try{if(sessionStorage.getItem('rc-visited'))document.documentElement.classList.add('is-return')}catch(e){}</script>
@@ -115,248 +114,73 @@
 
 <main class="page">
 
-  <!-- HERO (green): title, sources and tags -->
-  <section class="section hero-article" theme="white">
-    <div class="nav-slot" data-theme="white"></div>
-    <div class="the-container">
-      <div class="the-grid">
-        <div class="col-main">
-          <a href="/research" class="cta cta-button button-back" size="large" theme="white"><span class="hover-loop left"><span class="inner"><svg class="icon"><use href="#i-arrow"/></svg>All research</span></span></a>
-          <h1 class="name type-h3" data-split="h1">How often payments go out wrong</h1>
-          <div class="meta">
-            <span class="date type-mono">Sources checked Sep 2026</span>
-            <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="#i-tile-evidence"/></svg><span class="label">Benchmark</span></span>
-            <span class="meta-item"><svg class="icon" aria-hidden="true"><use href="#i-tile-files"/></svg><span class="label">APQC · Ardent Partners</span></span>
-          </div>
-        </div>
-        <div class="col-bottom">
-          <div class="tags type-mono"><div class="tags-wrap">
-            <span class="tag">Accounts Payable</span>
-            <span class="tag">Duplicate Payments</span>
-            <span class="tag">Duplicate Bills</span>
-            <span class="tag">Payment Mismatches</span>
-            <span class="tag">Benchmarks</span>
-          </div></div>
-        </div>
+  <!-- Every claim links to its source in the numbered list. Figures were checked against the original documents in Nov 2026; anything our own is labeled as ours. -->
+  <section class="rs-article-hero" theme="grey">
+    <div class="nav-slot" data-theme="grey"></div>
+    <div class="rs-article-grid">
+      <div class="rs-article-copy">
+        <a href="/research" class="rs-back"><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>All research</a>
+        <h1 class="type-h2" data-split="h1">How often payments go out wrong</h1>
+        <div class="rs-article-stat"><b>1.5%</b><span>of disbursements are duplicate or erroneous at the median organization, per APQC</span></div>
+        <div class="type-mono rs-meta">Benchmark · APQC · Ardent Partners · Sources checked Nov 2026</div>
       </div>
+      <div class="rs-model"><video data-reel data-page-baked src="/media/research/benchmarks.webm" poster="/media/research/benchmarks.webp" autoplay loop muted playsinline preload="auto" aria-hidden="true"></video></div>
     </div>
   </section>
 
-  <div class="article-sections">
-
-    <!-- SUMMARY -->
-    <section class="rounded-section shouldAnimate" id="summary" theme="white">
-      <div class="bg bg-top" theme="green-2"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-content">
-              <div class="the-grid">
-                <div class="the-col">
-                  <div class="richtext">
-                    <h4>SUMMARY</h4>
-                    <h5><span class="type-body-headline">Two published benchmarks describe how often accounts payable gets a payment wrong. APQC puts duplicate or erroneous payments at 1.5% of disbursements at the median organization, across a sample of 1,686 companies. Ardent Partners puts the average invoice exception rate at 18.4%. Neither number is a loss figure, and neither describes a single company. That distinction matters more than the figures do.</span></h5>
-                    <p>APQC's measure counts disbursements, not dollars. A disbursement is a single remittance to a supplier, so the 1.5% describes how many payments in a year were duplicate or erroneous, not how much money they carried. The sample behind the median is 1,686 organizations.</p>
-                    <p>Ardent's 18.4% is a different thing again: the share of invoices that need exception handling before they can be paid. An exception is a bill that stops, not a bill that was paid wrong. The two are related, though, because invoices that fall out of the normal flow get handled by hand, and hands are where duplicates come from.</p>
-                    <p>Both are medians or averages taken across a large sample, which means half the organizations measured sit on either side of them.</p>
-                    <h4><strong>WHAT THE NUMBERS LOOK LIKE IN PRACTICE</strong></h4>
-                    <p>At the median rate, an organization issuing 4,000 payments a year would expect roughly 60 of them to be duplicate or erroneous. That is a count, not a cost:</p>
-                    <ul>
-                      <li>A duplicate on a $400 freight bill and a duplicate on a $40,000 equipment invoice both count as one.</li>
-                      <li>Sizing the money is a separate exercise from counting the payments, and the two rarely land on the same scale.</li>
-                    </ul>
-                    <p>Ardent's cost benchmarks sit alongside it:</p>
-                    <ul>
-                      <li><strong>$9.84</strong> is the average cost to process a single invoice, and <strong>8.2 days</strong> is the average time it takes.</li>
-                      <li><strong>57%</strong> of suppliers can send invoices electronically, which leaves a large share still arriving as paper or email attachments.</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="article-module article-columns">
-              <div class="the-grid">
-                <ul class="items">
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-chart"/></svg>
-                    <div class="heading">1.5%</div>
-                    <div class="desc type-body-xs">Share of disbursements that are duplicate or erroneous at the median organization, from a sample of 1,686 companies.</div>
-                  </div></li>
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-flag"/></svg>
-                    <div class="heading">18.4%</div>
-                    <div class="desc type-body-xs">Average share of invoices that need exception handling before they can be paid, across the whole survey.</div>
-                  </div></li>
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-coin"/></svg>
-                    <div class="heading">$9.84</div>
-                    <div class="desc type-body-xs">Average cost to process a single invoice, which takes an average of 8.2 days end to end.</div>
-                  </div></li>
-                </ul>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FINDINGS -->
-    <section class="rounded-section" id="findings" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-content">
-              <div class="the-grid">
-                <div class="the-col">
-                  <div class="richtext">
-                    <h4>FINDINGS</h4>
-                    <p><strong>Exceptions are the drag on every other number.</strong> Ardent describes them as the biggest single reason the benchmarks aren't better than they are: an invoice that stops has to be chased, and chasing is slow and expensive.</p>
-                    <p>Some of what that chasing costs shows up in the supplier relationship:</p>
-                    <ul>
-                      <li><strong>21.9%</strong> of accounts payable staff time goes on dealing with suppliers, which Ardent attributes in no small part to exceptions.</li>
-                      <li><strong>39%</strong> of AP leaders say manual, low-value work is holding the function back.</li>
-                    </ul>
-                    <p>Ardent defines Best-in-Class as the fifth of organizations with the lowest average invoice processing costs and the shortest cycle times. The gap between them and everyone else is wide:</p>
-                    <ul>
-                      <li>Costs are <strong>79% lower</strong> and processing is <strong>79% faster</strong>.</li>
-                      <li>Exception rates are <strong>47% lower</strong>.</li>
-                      <li>They have 1.4 times as many suppliers sending invoices electronically, and more than 1.8 times as many invoices going through without a person touching them.</li>
-                    </ul>
-                    <p>APQC's measure sits inside a defined process scope that includes verifying the pay file against the vendor master, auditing invoices and key data, and researching and resolving payable exceptions. The same steps, in other words, that the exception rate describes.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAKEAWAYS -->
-    <section class="rounded-section" id="takeaways" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-content">
-              <div class="the-grid">
-                <div class="the-col">
-                  <div class="richtext">
-                    <h4>TAKEAWAYS</h4>
-                    <p>Benchmarks are useful for scale, not for scoring. A rate published across 1,686 organizations tells you what order of magnitude to expect; it does not tell you what happened in your own ledger. These are the things worth doing with it.</p>
-                    <p>The two measures also answer different questions. APQC asks how many payments went out wrong. Ardent asks how many invoices could not be processed cleanly. An organization can look good on one and poor on the other, and the gap between them is usually where the manual work lives.</p>
-                    <ul>
-                      <li><strong>Count first, then size.</strong> APQC's 1.5% is a count of payments. Before anyone asks what a duplicate rate costs, it helps to know how many payments are in question and which vendors they sit with.</li>
-                      <li><strong>Group exceptions by reason.</strong> An exception rate is an average across very different problems: a missing purchase order, a price that doesn't match, a vendor name spelled two ways. Each has a different fix.</li>
-                      <li><strong>Check the vendor master.</strong> APQC's process scope starts with verifying the pay file against the vendor master. Duplicate vendor records are one of the quiet ways the same invoice gets paid twice.</li>
-                      <li><strong>Watch where supplier time goes.</strong> If a fifth of the team's time is spent answering suppliers, the questions themselves are data. The vendors who ask most often are usually the ones whose invoices stop most often.</li>
-                      <li><strong>Read the Best-in-Class gap as a range, not a target.</strong> A 47% lower exception rate is what the top fifth achieve. The useful question is which of their practices are available to you now.</li>
-                    </ul>
-                    <h3>THE BOTTOM LINE</h3>
-                    <p>Neither benchmark is a loss figure, and neither is a finding. They describe how often payments and invoices go wrong across a large sample, which is a reason to look at your own records rather than a substitute for looking. That is the part Reclaim does: it reads the records you already have and shows the specific rows behind each result, so the number you end up with is yours rather than an average.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="article-module article-columns">
-              <div class="the-grid">
-                <ul class="items">
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <div class="heading type-h6">Count them</div>
-                    <div class="desc type-body-xs">A rate is a count of payments, not a sum of money. Start with how many.</div>
-                  </div></li>
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <div class="heading type-h6">Size them</div>
-                    <div class="desc type-body-xs">Which vendors, and which amounts. The cost follows from the records, not the rate.</div>
-                  </div></li>
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <div class="heading type-h6">Source them</div>
-                    <div class="desc type-body-xs">Every figure on this page links to the organization that published it.</div>
-                  </div></li>
-                </ul>
-              </div>
-            </div>
-
-            <div class="article-module article-carousel">
-              <div class="the-grid">
-                <div class="carousel-prev-next-controls controls">
-                  <button type="button" class="hover-loop cta-button-square prev" size="medium" aria-label="Previous"><span class="inner"><svg class="icon"><use href="#i-arrow"/></svg></span></button>
-                  <button type="button" class="hover-loop cta-button-square next" size="medium" aria-label="Next"><span class="inner"><svg class="icon"><use href="#i-arrow"/></svg></span></button>
-                </div>
-                <div class="carousel-wrapper">
-                  <div class="offset">
-                    <div class="swiper">
-                      <ul class="swiper-wrapper">
-                        <li class="swiper-slide"><div class="article-carousel-item1 item carousel-cell">
-                          <div class="content">
-                            <div class="top"><div class="number type-h1"><div class="value"><div class="numbers" data-number="1.5"></div></div><div class="type-h1 unit">%</div></div><div class="type-h4 heading">Of payments</div></div>
-                            <div class="bottom"><p class="desc type-body-small">At the median organization, 1.5% of the disbursements issued in a year are duplicate or erroneous.</p><a class="footer type-mono" href="https://www.apqc.org/resources/benchmarking/open-standards-benchmarking/measures/percentage-total-annual-number" target="_blank" rel="noopener">APQC</a></div>
-                          </div>
-                          <div class="no-padding image"><div class="wrap"><img class="media" src="/assets/cs-2.png" alt="" loading="lazy"></div></div>
-                        </div></li>
-                        <li class="swiper-slide"><div class="article-carousel-item1 item carousel-cell">
-                          <div class="content">
-                            <div class="top"><div class="number type-h1"><div class="value"><div class="numbers" data-number="18.4"></div></div><div class="type-h1 unit">%</div></div><div class="type-h4 heading">Exceptions</div></div>
-                            <div class="bottom"><p class="desc type-body-small">On average, 18.4% of the invoices an AP team processes need exception handling.</p><a class="footer type-mono" href="https://payablesplace.ardentpartners.com/2026/01/state-of-epayables-part-nine-ap-benchmarks-and-best-in-class-performance/" target="_blank" rel="noopener">Ardent Partners</a></div>
-                          </div>
-                          <div class="no-padding image"><div class="wrap"><img class="media" src="/assets/dept-procurement.png" alt="" loading="lazy"></div></div>
-                        </div></li>
-                        <li class="swiper-slide"><div class="article-carousel-item1 item carousel-cell">
-                          <div class="content">
-                            <div class="top"><div class="number type-h1"><div class="value"><div class="numbers" data-number="47"></div></div><div class="type-h1 unit">%</div></div><div class="type-h4 heading">Lower</div></div>
-                            <div class="bottom"><p class="desc type-body-small">Best-in-Class organizations run exception rates 47% lower than the average.</p><a class="footer type-mono" href="https://payablesplace.ardentpartners.com/2026/01/state-of-epayables-part-nine-ap-benchmarks-and-best-in-class-performance/" target="_blank" rel="noopener">Ardent Partners</a></div>
-                          </div>
-                          <div class="no-padding image"><div class="wrap"><img class="media" src="/assets/cs-1.png" alt="" loading="lazy"></div></div>
-                        </div></li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="article-nav desktop-only">
-      <div class="sticky">
-        <div class="the-container">
-          <div class="the-grid">
-            <div class="the-col">
-              <ul>
-                <li><a class="item" href="#summary"><span class="dot"></span><span class="label type-h6">Summary</span></a></li>
-                <li><a class="item" href="#findings"><span class="dot"></span><span class="label type-h6">Findings</span></a></li>
-                <li><a class="item" href="#takeaways"><span class="dot"></span><span class="label type-h6">Takeaways</span></a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+  <section class="rs-doc" theme="white">
+    <div class="nav-slot" data-theme="white"></div>
+    <div class="rs-doc-grid">
+      <nav class="rs-toc" aria-label="On this page"><div class="type-mono">On this page</div><ol><li><a href="#sec-1">The short version</a></li><li><a href="#sec-2">What APQC measures</a></li><li><a href="#sec-3">What Ardent Partners measures</a></li><li><a href="#sec-4">What the best teams do differently</a></li><li><a href="#sec-5">Why the two numbers don’t combine</a></li><li><a href="#sec-6">What this data can’t tell you</a></li><li><a href="#sec-7">What to do with it</a></li><li><a href="#sec-8">Where Reclaim fits</a></li><li><a href="#sources">Sources</a></li></ol></nav>
+      <article class="rs-body">
+      <section class="rs-sec" id="sec-1">
+        <h2>The short version</h2>
+        <p class="rs-lead">Two published benchmarks describe how often accounts payable gets a payment or invoice wrong. APQC’s median is 1.5% of disbursements.<a class="rs-cite" href="#s1">[1]</a> Ardent Partners’ average invoice exception rate is 18.4%.<a class="rs-cite" href="#s2">[2]</a></p><p>Neither is a loss figure, and they don’t measure the same thing. One counts payments that already went out wrong. The other counts invoices that couldn’t be processed cleanly. Reading them correctly matters more than the numbers themselves.</p>
+      </section>
+      <section class="rs-sec" id="sec-2">
+        <h2>What APQC measures</h2>
+        <p>APQC’s measure is the percentage of the total annual number of disbursements that are duplicate or erroneous payments. It defines a disbursement as a single remittance to a supplier.<a class="rs-cite" href="#s1">[1]</a> So this is a count of payments, not a share of dollars.</p><p>The public page shows a 1.5% median across a total sample of 2,386 companies. The 25th and 75th percentile values aren’t shown publicly.<a class="rs-cite" href="#s1">[1]</a></p><p>APQC scopes the measure to steps including verifying the pay file against the vendor master, auditing invoices and key data, approving payments, and researching and resolving payable exceptions.<a class="rs-cite" href="#s1">[1]</a></p><h3>What 1.5% looks like</h3><p>This is our own arithmetic, not APQC’s: at the median rate, an organization issuing 4,000 payments a year would expect about 60 to be duplicate or erroneous. A duplicate on a $400 bill and a duplicate on a $40,000 invoice each count as one, so the rate alone tells you nothing about the money.</p>
+      </section>
+      <section class="rs-sec" id="sec-3">
+        <h2>What Ardent Partners measures</h2>
+        <p>Ardent’s 18.4% is the average share of invoices that need exception handling.<a class="rs-cite" href="#s2">[2]</a> An exception is an invoice that stops, not necessarily one that was paid wrong. Ardent calls exceptions typically the biggest single reason its other benchmarks aren’t better.<a class="rs-cite" href="#s2">[2]</a></p><div class="rs-table"><table><thead><tr><th>Ardent benchmark</th><th>Average</th></tr></thead><tbody><tr><td>Invoice exception rate</td><td>18.4%</td></tr><tr><td>Cost to process one invoice</td><td>$9.84</td></tr><tr><td>Time to process one invoice</td><td>8.2 days</td></tr><tr><td>Staff time spent dealing with suppliers</td><td>21.9%</td></tr><tr><td>Suppliers able to send invoices electronically</td><td>57%</td></tr></tbody></table></div><p>Ardent also reports that 39% of AP leaders believe their potential is held back by the volume of manual, low-value work.<a class="rs-cite" href="#s2">[2]</a></p>
+      </section>
+      <section class="rs-sec" id="sec-4">
+        <h2>What the best teams do differently</h2>
+        <p>Ardent defines Best-in-Class as the 20% of enterprises with the lowest average invoice processing costs and the shortest cycle times, and notes that these groups use technology to streamline AP.<a class="rs-cite" href="#s2">[2]</a></p><div class="rs-table"><table><thead><tr><th>Best-in-Class compared with peers</th><th>Difference</th></tr></thead><tbody><tr><td>Invoice processing cost</td><td>79% lower</td></tr><tr><td>Invoice processing time</td><td>79% faster</td></tr><tr><td>Invoice exception rate</td><td>47% lower</td></tr><tr><td>Suppliers enabled for electronic invoices</td><td>1.4 times as many</td></tr><tr><td>Invoices processed straight through</td><td>1.8 times as many</td></tr><tr><td>Staff time on supplier inquiries</td><td>Roughly half</td></tr></tbody></table></div><p>Because Best-in-Class is defined by cost and speed, those two gaps partly follow from how the group was chosen. The exception rate gap is the more telling one for this topic.</p>
+      </section>
+      <section class="rs-sec" id="sec-5">
+        <h2>Why the two numbers don’t combine</h2>
+        <p>It’s tempting to read these as one story, but they measure different moments. APQC looks at payments after they’ve gone out. Ardent looks at invoices before they’re paid. An organization could do well on one and poorly on the other.</p><p>Our reading, not a finding from either source, is that they’re connected through manual work: invoices that fall out of the normal flow get handled by hand, and handling by hand creates more chances for a mistake.</p>
+      </section>
+      <section class="rs-sec" id="sec-6">
+        <h2>What this data can’t tell you</h2>
+        <ul><li><b>It isn’t a loss figure.</b> APQC’s number counts payments, not dollars.<a class="rs-cite" href="#s1">[1]</a></li><li><b>It doesn’t describe your company.</b> Both are figures taken across a group, and your own rate could be far higher or lower.</li><li><b>The detail is limited.</b> APQC’s full benchmark data is for its members.<a class="rs-cite" href="#s1">[1]</a> The Ardent article we cite doesn’t state its sample size or methods; it attributes its findings to Ardent’s State of ePayables 2025 report.<a class="rs-cite" href="#s2">[2]</a></li></ul>
+      </section>
+      <section class="rs-sec" id="sec-7">
+        <h2>What to do with it</h2>
+        <ul><li><b>Count first, then size.</b> Find out how many payments are in question and which vendors they sit with before you ask what it cost.</li><li><b>Group exceptions by reason.</b> A missing purchase order and a price mismatch are different problems with different fixes.</li><li><b>Check your vendor list.</b> The same vendor set up twice is an easy way for one invoice to get paid twice.</li><li><b>Look at your own records.</b> A benchmark tells you what’s worth checking, not what happened to you.</li></ul>
+      </section>
+      <section class="rs-sec" id="sec-8">
+        <h2>Where Reclaim fits</h2>
+        <p>Reclaim doesn’t produce a benchmark. It reads an export of your own payments and shows the specific rows behind each result, including exact and near-duplicate payments, so the number you end up with is yours rather than an average. You then check each result against your bank and your bills.</p>
+      </section>
+      <section class="rs-sec rs-sources" id="sources">
+        <h2>Sources</h2>
+        <ol>
+        <li id="s1"><span>APQC. “Percentage of total annual number of disbursements processed which are duplicate or erroneous payments.” Open Standards Benchmarking, Measure ID 105905.</span> <a href="https://www.apqc.org/resources/benchmarking/open-standards-benchmarking/measures/percentage-total-annual-number" target="_blank" rel="noopener">apqc.org</a> <small>Median and sample size as shown on the public page; full data requires membership.</small></li>
+        <li id="s2"><span>Bartolini, Andrew. “State of ePayables (Part Nine): AP Benchmarks and Best-in-Class Performance.” Ardent Partners, Payables Place, January 22, 2026.</span> <a href="https://payablesplace.ardentpartners.com/2026/01/state-of-epayables-part-nine-ap-benchmarks-and-best-in-class-performance/" target="_blank" rel="noopener">payablesplace.ardentpartners.com</a></li>
+        </ol>
+      </section>
+      </article>
     </div>
+  </section>
 
-  </div>
-
-  <!-- CLOSING (white): the money coming home: a return arrow around a coin (blender/wc_models.py scene=closing); one action, the three promises under it -->
+  <!-- CLOSING (white): the mark, as a stack of records with the green one out (blender/hero_stack.py logo=1: the How It Works logo loop, cropped; the Safari MP4 is baked on this section’s white); one action, the three promises under it -->
   <section class="section closing" theme="white" data-closing>
     <div class="nav-slot" data-theme="white"></div>
     <div class="the-container">
-      <img class="closing-object" src="/media/closing/return-720.webp" srcset="/media/closing/return-720.webp 720w, /media/closing/return-1200.webp 1200w" sizes="(max-width: 1023px) 72vw, 34rem" width="720" height="496" alt="" loading="lazy" decoding="async" data-closing-object>
+      <video class="closing-object" data-reel data-page-baked src="/media/closing/mark.webm" poster="/media/closing/mark-720.webp" width="720" height="401" loop muted playsinline preload="metadata" aria-hidden="true"></video>
       <h2 class="heading type-h2" data-split="h2">Don't just find the money.<br><em>Reclaim it.</em></h2>
       <p class="closing-lede" data-closing-in>Upload an export and see what your own records show.</p>
       <div class="closing-actions" data-closing-in>
@@ -507,7 +331,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.4/dist/lenis.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/swiper@11.2.6/swiper-bundle.min.js"></script>
 <script src="/main.js"></script>
 <script src="/reels.js"></script>
 </body>

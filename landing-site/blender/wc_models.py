@@ -306,7 +306,7 @@ if moving:
 
 def sig(f):
     pose(ftime(f))
-    return tuple(round(v, 5) for o in moving for v in tuple(o.location) + tuple(o.scale))
+    return tuple(round(v, 5) for o in moving for v in tuple(o.location) + tuple(o.scale) + tuple(o.rotation_euler))
 
 
 if 'frames' in A:

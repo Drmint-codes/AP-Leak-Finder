@@ -849,18 +849,22 @@
   if (!box) return;
   const input = box.querySelector('input');
   const money = (n) => `$${Math.round(n).toLocaleString('en-US')}`;
-  const cell = (plan) => box.querySelector(`[data-pr-plan="${plan}"]`);
+  const cell = (plan) => document.querySelector(`[data-pr-plan="${plan}"]`);
   const update = () => {
     const back = Number(input.value);
     const growth = 15 + back * 0.1;
     const flat = 50;
+    const top = Math.max(growth, flat);
     box.querySelector('[data-pr-amount]').textContent = money(back);
-    cell('growth').querySelector('[data-pr-cost]').textContent = money(growth);
-    cell('growth').classList.toggle('is-less', growth < flat);
-    cell('flat').classList.toggle('is-less', flat < growth);
+    for (const [plan, cost] of [['growth', growth], ['flat', flat]]) {
+      const el = cell(plan);
+      el.querySelector('[data-pr-cost]').textContent = money(cost);
+      el.classList.toggle('is-less', cost < Math.min(growth, flat) + 0.001 && growth !== flat);
+      el.style.setProperty('--h', (cost / top).toFixed(3));
+    }
     box.querySelector('[data-pr-note]').textContent = growth === flat
       ? 'At $350 a month, they cost the same.'
-      : `${growth < flat ? 'Growth' : 'Flat'} saves you ${money(Math.abs(growth - flat))} that month.`;
+      : `${growth < flat ? 'Growth' : 'Flat'} costs ${money(Math.abs(growth - flat))} less that month.`;
   };
   input.addEventListener('input', update);
   update();
