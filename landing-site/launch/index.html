@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reclaim Launch</title>
+<meta name="description" content="Paid twice. Nobody noticed. Introducing Reclaim Audit: find money you already paid.">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Tinos&display=block" rel="stylesheet">
+<link rel="stylesheet" href="/launch/launch.css">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+
+<main class="launch-page">
+  <h1 class="sr-only">Introducing Reclaim Audit — find money you already paid</h1>
+
+  <!-- A 10-second launch film drawn live on a 1920×1080 stage and scaled to the player. -->
+  <div class="player is-loading" id="player" tabindex="0" role="region" aria-label="Reclaim Audit launch film, 10 seconds, no sound. Space plays or pauses, arrow keys step, Home restarts.">
+    <div class="screen" id="screen">
+      <div class="stage" id="stage" aria-hidden="true"></div>
+    </div>
+
+    <button type="button" class="big-play" id="bigPlay" aria-label="Play film">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.2v13.6c0 .8.9 1.3 1.6.9l10.6-6.8c.6-.4.6-1.3 0-1.7L9.6 4.3C8.9 3.9 8 4.4 8 5.2z"/></svg>
+      <svg class="i-replay" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 1-6.6 4.7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4.2 4.6v5.2h5.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="chrome" id="chrome">
+      <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" aria-valuetext="0 seconds">
+        <div class="scrub-track"><div class="scrub-fill" id="scrubFill"></div><div class="scrub-knob" id="scrubKnob"></div></div>
+      </div>
+      <div class="bar">
+        <span class="time" id="time">0:10</span>
+        <div class="bar-right">
+          <a class="cta" href="/audit?entry=upload">Start an audit</a>
+          <button type="button" class="ctl ctl-pp" id="ppBtn" aria-label="Play">
+            <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="4.2" y="3.5" width="2.6" height="9" rx=".8"/><rect x="9.2" y="3.5" width="2.6" height="9" rx=".8"/></svg>
+            <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.2 3.6v8.8c0 .6.6.9 1.1.6l6.8-4.4c.5-.3.5-.9 0-1.2L6.3 3C5.8 2.7 5.2 3 5.2 3.6z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="sr-only">Paid twice. Nobody noticed. No sampling. Introducing Reclaim Audit. Zero integrations required. Find money you already paid. Duplicate payment recovered: $8,420.00 from Acme Industrial Supply, invoice INV-28491.</p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script type="module" src="/launch/launch.js"></script>
+</body>
+</html>

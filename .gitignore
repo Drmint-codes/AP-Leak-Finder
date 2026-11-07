@@ -42,3 +42,8 @@ data/
 demo-dist
 demo-onboarding-dist
 .reclaim-test-results.json
+
+# render frames and raw footage, never committed
+.film30/
+.tmp-frames/
+*.MOV
