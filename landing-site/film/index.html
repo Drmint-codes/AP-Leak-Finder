@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reclaim Film</title>
+<meta name="description" content="Reclaim in 42 seconds: find money you already paid.">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&display=block" rel="stylesheet">
+<link rel="stylesheet" href="/film/film.css">
+</head>
+<body>
+
+<main class="film-page">
+  <h1 class="sr-only">Reclaim — find money you already paid</h1>
+
+  <!-- The film is drawn live on a 1920×1080 stage and scaled to the player; the chrome behaves like a video player. -->
+  <div class="player is-poster" id="player" tabindex="0" role="region" aria-label="Reclaim film, 42 seconds, with sound. Space plays or pauses, arrow keys skip 5 seconds, M mutes, C shows captions.">
+    <div class="screen" id="screen">
+      <div class="stage" id="stage" aria-hidden="true"></div>
+      <div class="captions" id="captions" aria-hidden="true"></div>
+    </div>
+
+    <button type="button" class="big-play" id="bigPlay" aria-label="Play film">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.2v13.6c0 .8.9 1.3 1.6.9l10.6-6.8c.6-.4.6-1.3 0-1.7L9.6 4.3C8.9 3.9 8 4.4 8 5.2z"/></svg>
+      <svg class="i-replay" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 1-6.6 4.7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4.2 4.6v5.2h5.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="chrome" id="chrome">
+      <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="42" aria-valuenow="0" aria-valuetext="0 seconds">
+        <div class="scrub-track"><div class="scrub-fill" id="scrubFill"></div><div class="scrub-knob" id="scrubKnob"></div></div>
+      </div>
+      <div class="bar">
+        <span class="time" id="time">0:41</span>
+        <div class="bar-right">
+          <button type="button" class="ctl ctl-pp" id="ppBtn" aria-label="Play">
+            <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="4.2" y="3.5" width="2.6" height="9" rx=".8"/><rect x="9.2" y="3.5" width="2.6" height="9" rx=".8"/></svg>
+            <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.2 3.6v8.8c0 .6.6.9 1.1.6l6.8-4.4c.5-.3.5-.9 0-1.2L6.3 3C5.8 2.7 5.2 3 5.2 3.6z"/></svg>
+          </button>
+          <button type="button" class="ctl ctl-mute" id="muteBtn" aria-label="Mute" aria-pressed="false">
+            <svg class="i-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.2L12 5.6v12.8l-4.8-3.9H4z" fill="currentColor"/><path d="M15.2 9.2a4 4 0 0 1 0 5.6M17.6 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <svg class="i-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.2L12 5.6v12.8l-4.8-3.9H4z" fill="currentColor"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="ctl ctl-cc" id="ccBtn" aria-label="Captions" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.4 10.1a2.3 2.3 0 1 0 0 3.8M17 10.1a2.3 2.3 0 1 0 0 3.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="sr-only" id="transcript">Accounts payable errors cost businesses millions. All it takes is one duplicate invoice, or a new bank account, to trigger double payments, lost margin, and cash you never get back. Reclaim. A payment audit that lets you securely upload, instantly find, and recover money you already paid. Precise. Traceable. Provable. Duplicates, overpayments, bank changes. Reclaim checks every payment, catching leaks at scale. Protect your margin. Reclaim — find money you already paid.</p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="/film/film.js"></script>
+</body>
+</html>
