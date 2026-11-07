@@ -120,7 +120,8 @@
     <div class="clip"><div class="nav-slot" data-theme="grey"></div></div>
     <div class="content the-grid">
       <div class="hiw-hero-copy">
-        <h1 class="heading1 type-h2" data-split="h1">From your payments to your money back.</h1>
+        <div class="eyebrow type-mono">How it works</div>
+        <h1 class="heading1 type-h1" data-split="h1">From your payments to your money back.</h1>
         <p class="type-body-large">Upload an export of your payments. Reclaim checks every one, shows you the records behind each result, and helps you get the money back once you confirm it. Nothing reaches a vendor until you approve it.</p>
         <div class="hero-ctas">
           <a href="/audit?entry=sample" class="cta cta-button" size="large" theme="black"><span class="hover-loop"><span class="inner">Try it on sample data</span></span></a>
@@ -133,6 +134,7 @@
 
   <section class="hiw-parts" theme="grey">
     <div class="nav-slot" data-theme="grey"></div>
+    <div class="section-head hiw-parts-head"><div class="eyebrow type-mono">Four parts</div><h2 class="type-h2" data-split="h2">Upload, check, confirm, recover.</h2></div>
     <div class="hiw-parts-grid">
       <a class="hiw-part" href="#step-1">
         <div class="hiw-model"><video data-reel data-page-baked src="/media/hiw/records.webm" poster="/media/hiw/records.webp" loop muted playsinline preload="metadata" aria-hidden="true"></video></div>
@@ -163,6 +165,7 @@
 
   <section class="hiw-process" id="process" theme="black">
     <div class="nav-slot" data-theme="black"></div>
+    <div class="section-head hiw-process-head"><div class="eyebrow type-mono">Step by step</div><h2 class="type-h2" data-split="h2">Six steps, from a CSV to money back.</h2></div>
     <div class="hiw-process-grid">
       <div class="hiw-mac-wrap">
         <figure class="hiw-mac" aria-hidden="true">
@@ -242,43 +245,23 @@
     </div>
   </section>
 
-  <div class="article-sections">
-    <section class="rounded-section" id="faq" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="full desktop-only divider-block"><div class="the-container"><div class="the-grid"><div class="divider-v"></div></div></div></div>
-          <div class="content">
-            <div class="article-module article-head">
-              <div class="the-grid">
-                <div class="the-col"><div class="generic"></div></div>
-                <h2 class="type-h2 heading" data-split="h2">FAQ</h2>
-              </div>
-            </div>
-            <div class="article-module article-accordion">
-              <div class="the-grid">
-                <div class="the-col">
-                  <ul class="items">
-                    <li><details><summary class="type-body-medium">What records does Reclaim need?</summary><p class="desc type-body-small">Your bills, the payments against them, your vendors, and your vendor credits. You upload them as CSV exports. Our <a href="/guides">export guides</a> show where to find them in common accounting tools.</p></details></li>
-                    <li><details><summary class="type-body-medium">Do I need to connect my accounting system?</summary><p class="desc type-body-small">No. You can start with files you export yourself. Direct connections are in development. Nothing needs to be installed.</p></details></li>
-                    <li><details><summary class="type-body-medium">What does Reclaim look for?</summary><p class="desc type-body-small">Eight things: exact and near-duplicate payments, overpayments, invoice numbers shared across vendors, changed vendor bank details, unusually large payments, and early-payment discounts that were missed or left unclaimed. Each one is explained on <a href='/what-it-checks'>What It Checks</a>, with an example.</p></details></li>
-                    <li><details><summary class="type-body-medium">How does Reclaim decide something is a mistake?</summary><p class="desc type-body-small">It compares records against each other: vendors, amounts, invoice numbers, dates, and references. A finding is raised when the records themselves show the problem, and every finding lists the records it is based on.</p></details></li>
-                    <li><details><summary class="type-body-medium">Can a finding turn out to be fine?</summary><p class="desc type-body-small">Yes. A partial payment, a deposit, or a credit applied outside your export can look like a mistake. That's why every finding shows its records, and why you review it before treating it as one.</p></details></li>
-                    <li><details><summary class="type-body-medium">Which accounting tools does it work with?</summary><p class="desc type-body-small">Reclaim works from exported records, so it isn't tied to one tool, and direct connections are in development. We have export guides for QuickBooks Online, Xero, NetSuite, and Bill.</p></details></li>
-                    <li><details><summary class="type-body-medium">Does Reclaim contact my vendors?</summary><p class="desc type-body-small">Only once you approve a request, and then you send it from your Gmail or your own email. Reclaim keeps track of it, and you log the vendor’s replies on the finding.</p></details></li>
-                    <li><details><summary class="type-body-medium">How is my data handled?</summary><p class="desc type-body-small">Our <a href="/security">Security page</a> covers what Reclaim reads, what it can never do, and how AI is kept to the minimum each task needs.</p></details></li>
-                    <li><details><summary class="type-body-medium">Who is Reclaim for?</summary><p class="desc type-body-small">Businesses that pay a lot of vendors, without a team to chase every mistake: finance and AP teams, operators, and founders.</p></details></li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
+  <section class="px-faq" id="faq" theme="grey">
+    <div class="nav-slot" data-theme="grey"></div>
+    <div class="px-faq-grid">
+      <div><div class="eyebrow type-mono">Questions</div><h2 class="type-h2" data-split="h2">The questions people ask first.</h2></div>
+      <ul class="px-faq-list">
+        <li><details><summary class="type-body-medium">What records does Reclaim need?</summary><p class="desc type-body-small">Your bills, the payments against them, your vendors, and your vendor credits. You upload them as CSV exports. Our <a href="/guides">export guides</a> show where to find them in common accounting tools.</p></details></li>
+        <li><details><summary class="type-body-medium">Do I need to connect my accounting system?</summary><p class="desc type-body-small">No. You can start with files you export yourself. Direct connections are in development. Nothing needs to be installed.</p></details></li>
+        <li><details><summary class="type-body-medium">What does Reclaim look for?</summary><p class="desc type-body-small">Eight things: exact and near-duplicate payments, overpayments, invoice numbers shared across vendors, changed vendor bank details, unusually large payments, and early-payment discounts that were missed or left unclaimed. Each one is explained on <a href='/what-it-checks'>What It Checks</a>, with an example.</p></details></li>
+        <li><details><summary class="type-body-medium">How does Reclaim decide something is a mistake?</summary><p class="desc type-body-small">It compares records against each other: vendors, amounts, invoice numbers, dates, and references. A finding is raised when the records themselves show the problem, and every finding lists the records it is based on.</p></details></li>
+        <li><details><summary class="type-body-medium">Can a finding turn out to be fine?</summary><p class="desc type-body-small">Yes. A partial payment, a deposit, or a credit applied outside your export can look like a mistake. That's why every finding shows its records, and why you review it before treating it as one.</p></details></li>
+        <li><details><summary class="type-body-medium">Which accounting tools does it work with?</summary><p class="desc type-body-small">Reclaim works from exported records, so it isn't tied to one tool, and direct connections are in development. We have export guides for QuickBooks Online, Xero, NetSuite, and Bill.</p></details></li>
+        <li><details><summary class="type-body-medium">Does Reclaim contact my vendors?</summary><p class="desc type-body-small">Only once you approve a request, and then you send it from your Gmail or your own email. Reclaim keeps track of it, and you log the vendor’s replies on the finding.</p></details></li>
+        <li><details><summary class="type-body-medium">How is my data handled?</summary><p class="desc type-body-small">Our <a href="/security">Security page</a> covers what Reclaim reads, what it can never do, and how AI is kept to the minimum each task needs.</p></details></li>
+        <li><details><summary class="type-body-medium">Who is Reclaim for?</summary><p class="desc type-body-small">Businesses that pay a lot of vendors, without a team to chase every mistake: finance and AP teams, operators, and founders.</p></details></li>
+      </ul>
+    </div>
+  </section>
 
   <!-- CLOSING (white): the mark, as a stack of records with the green one out (blender/hero_stack.py logo=1: the How It Works logo loop, cropped; the Safari MP4 is baked on this section’s white); one action, the three promises under it -->
   <section class="section closing" theme="white" data-closing>

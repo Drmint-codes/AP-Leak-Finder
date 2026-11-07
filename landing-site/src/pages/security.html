@@ -4,294 +4,65 @@ description: Upload exports from your accounting system, with nothing connected 
 folder: security
 template: security
 ---
-  <!-- SECURITY.
-       Describes the control model the product is built to (plans/RECLAIM_V2_PRODUCT_AND_PRICING_SPEC.md:
-       §0 trust zones and minimum AI context, §17 approval, §19 what the agent may never do, §33 security
-       and control). Where data is held, how long, and the named encryption standards are deliberately NOT
-       claimed — that section says so plainly and is the one to replace once they are settled and verified. -->
-
-  <!-- HERO (black) -->
-  <section class="section hero-generic" theme="black">
+  <!-- SECURITY. Describes the control model the product is built to (plans/RECLAIM_V2_PRODUCT_AND_PRICING_SPEC.md:
+       §0 trust zones and minimum AI context, §17 approval, §19 what the agent may never do, §33 security and control).
+       Where data is held, how long, and the named encryption standards are deliberately NOT claimed; the "What we'll
+       publish next" section says so plainly and is the one to replace once they are settled and verified. -->
+  <section class="sc-hero" theme="black">
     <div class="nav-slot" data-theme="black"></div>
-    <div class="the-container">
-      <div class="the-grid">
-        <h1 class="heading heading1 type-h1" data-split="h1">You choose<br>what we see</h1>
-        <p class="desc type-body-large">Upload exports from your accounting system, with nothing connected to your books. Reclaim can't move money, can't change your books, and contacts no vendor until you approve it.</p>
-        <div class="bottom"><a href="#contact" class="cta cta-button has-arrow" size="large" theme="white" data-modal="talk"><span class="hover-loop"><span class="inner">Talk to us<svg class="icon"><use href="#i-arrow"/></svg></span></span></a></div>
+    <div class="sc-hero-copy">
+      <div class="eyebrow type-mono">Security</div>
+      <h1 class="type-h1" data-split="h1">You choose<br>what we see.</h1>
+      <p class="type-body-large">Upload exports from your accounting system, with nothing connected to your books. Reclaim can’t move money, can’t change your books, and contacts no vendor until you approve it.</p>
+    </div>
+    <ul class="sc-promises">
+      <li><b>Read only</b><span>Nothing in your books changes</span></li>
+      <li><b>No payment rights</b><span>It can’t move or release money</span></li>
+      <li><b>You approve</b><span>Nothing reaches a vendor without you</span></li>
+    </ul>
+  </section>
+
+  <section class="sc-section" id="reads" theme="grey">
+    <div class="nav-slot" data-theme="grey"></div>
+    <div class="section-head"><div class="eyebrow type-mono">What it reads</div><h2 class="type-h2" data-split="h2">What Reclaim reads.</h2></div>
+    <ul class="sc-cards"><li><span class="type-mono">01</span><b>The source you choose</b><p>Export the records you want checked from QuickBooks Online, Xero, Bill, NetSuite or any spreadsheet, and upload them. Nothing connects to your accounting system. Direct connections are in development.</p></li><li><span class="type-mono">02</span><b>Yours to delete</b><p>You decide what you upload, and you can export or delete your data whenever you like.</p></li><li><span class="type-mono">03</span><b>Read, never write</b><p>Nothing in your books changes. Reclaim reads your records, and when a case is closed it gives you the accounting steps to make yourself.</p></li><li><span class="type-mono">04</span><b>No payment rights</b><p>Reclaim cannot move money or release a payment. Refunds and credits go straight to you; Reclaim never holds recovered funds.</p></li></ul>
+  </section>
+
+  <section class="sc-section" id="evidence" theme="white">
+    <div class="nav-slot" data-theme="white"></div>
+    <div class="section-head"><div class="eyebrow type-mono">Evidence</div><h2 class="type-h2" data-split="h2">Every result points at a record.</h2></div>
+    <ul class="sc-cards"><li><span class="type-mono">01</span><b>Traced to the source</b><p>Every finding names the records it rests on, where each one came from in your books or your file, and the fields that matched.</p></li><li><span class="type-mono">02</span><b>Shown side by side</b><p>The bill and the payment sit side by side with the differences marked, not as a figure you have to trust.</p></li><li><span class="type-mono">03</span><b>Yours to check</b><p>You can open any record behind a result and check it against your books or the export you uploaded.</p></li><li><span class="type-mono">04</span><b>Yours to decide</b><p>Nothing goes to a vendor until you approve the recovery, and every step taken after that is logged: who, what, when and why.</p></li></ul>
+  </section>
+
+  <section class="sc-never" id="never" theme="black">
+    <div class="nav-slot" data-theme="black"></div>
+    <div class="section-head"><div class="eyebrow type-mono">Never</div><h2 class="type-h2" data-split="h2">What Reclaim never gets.</h2><p class="type-body-large">Three things Reclaim has no use for, and is built never to have.</p></div>
+    <ul class="sc-cards sc-cards-dark"><li><span class="type-mono">01</span><b>Your passwords</b><p>Connecting QuickBooks Online or Xero happens on their own sign-in and approval screen. Reclaim never asks for your password to your accounting system, your bank or a vendor portal.</p></li><li><span class="type-mono">02</span><b>Payment authority</b><p>Nothing in Reclaim can approve, release or reverse a payment. Whoever holds that authority today still holds it afterwards.</p></li><li><span class="type-mono">03</span><b>Your ledger, in an AI prompt</b><p>AI never browses your books. The financial engine works out the numbers; AI gets only the few facts one task needs, like the vendor, invoice and amount for a single email.</p></li></ul>
+  </section>
+
+  <section class="sc-section" id="pending" theme="grey">
+    <div class="nav-slot" data-theme="grey"></div>
+    <div class="sc-pending-grid">
+      <div>
+        <div class="eyebrow type-mono">Still to come</div>
+        <h2 class="type-h2" data-split="h2">What we’ll publish next.</h2>
+        <p class="type-body-large">Some of what belongs on a security page depends on decisions we are still making about storage.</p>
+        <p class="sc-pending-note">Reclaim is built to keep each customer’s data separate, encrypt your financial records and connection tokens, and let you export or delete what it holds. Where that data is kept, how long, and exactly which standards protect it are not settled yet. We would rather leave that blank than guess, and fill it in once it is true and checked.</p>
+      </div>
+      <ul class="sc-cards sc-cards-col"><li><span class="type-mono">01</span><b>Storage</b><p>Where your records are held, and for how long.</p></li><li><span class="type-mono">02</span><b>Encryption</b><p>What is encrypted in transit and at rest, named specifically.</p></li><li><span class="type-mono">03</span><b>Deletion</b><p>How you remove your data or disconnect, and what happens then.</p></li></ul>
+    </div>
+  </section>
+
+  <section class="sc-report" id="reporting" theme="white">
+    <div class="nav-slot" data-theme="white"></div>
+    <div class="sc-report-grid">
+      <div class="section-head"><div class="eyebrow type-mono">Reporting a problem</div><h2 class="type-h2" data-split="h2">Found something?</h2></div>
+      <div class="sc-report-copy">
+        <p class="type-body-large">If you think you have found a security problem with this site or with Reclaim, tell us before you tell anyone else. Use the contact form and say that it is a security report.</p>
+        <p>We don’t run a bug bounty programme, and we would rather say that plainly than imply one exists.</p>
+        <a href="#contact" class="cta cta-button" size="large" theme="black" data-modal="talk"><span class="hover-loop"><span class="inner">Report a security problem</span></span></a>
       </div>
     </div>
   </section>
 
-  <div class="article-sections">
-
-    <!-- WHAT RECLAIM READS -->
-    <section class="rounded-section shouldAnimate" id="reads" theme="white">
-      <div class="bg bg-top" theme="black"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-head2">
-              <div class="the-grid">
-                <div class="left"><h2 class="heading type-h3" data-split="h2">What Reclaim reads</h2></div>
-              </div>
-            </div>
-
-            <div class="article-module article-columns has-bg">
-              <div class="the-grid">
-                <ul class="items" data-cols="2">
-                  <li class="type-article-columns-item-card1 item-wrap"><div class="article-columns-item-card1 item">
-                    <div class="top"><div class="images"><svg class="icon" aria-hidden="true"><use href="#i-tile-files"/></svg></div><div class="heading">The source you choose</div></div>
-                    <div class="desc">Export the records you want checked from QuickBooks Online, Xero, Bill, NetSuite or any spreadsheet, and upload them. Nothing connects to your accounting system. Direct connections are in development.</div>
-                  </div></li>
-                  <li class="type-article-columns-item-card1 item-wrap"><div class="article-columns-item-card1 item">
-                    <div class="top"><div class="images"><svg class="icon" aria-hidden="true"><use href="#i-tile-unlinked"/></svg></div><div class="heading">Yours to delete</div></div>
-                    <div class="desc">You decide what you upload, and you can export or delete your data whenever you like.</div>
-                  </div></li>
-                  <li class="type-article-columns-item-card1 item-wrap"><div class="article-columns-item-card1 item">
-                    <div class="top"><div class="images"><svg class="icon" aria-hidden="true"><use href="#i-tile-view"/></svg></div><div class="heading">Read, never write</div></div>
-                    <div class="desc">Nothing in your books changes. Reclaim reads your records, and when a case is closed it gives you the accounting steps to make yourself.</div>
-                  </div></li>
-                  <li class="type-article-columns-item-card1 item-wrap"><div class="article-columns-item-card1 item">
-                    <div class="top"><div class="images"><svg class="icon" aria-hidden="true"><use href="#i-tile-nomoney"/></svg></div><div class="heading">No payment rights</div></div>
-                    <div class="desc">Reclaim cannot move money or release a payment. Refunds and credits go straight to you; Reclaim never holds recovered funds.</div>
-                  </div></li>
-                </ul>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- WHERE RESULTS COME FROM -->
-    <section class="rounded-section" id="evidence" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-head2">
-              <div class="the-grid">
-                <div class="left"><h2 class="heading type-h3" data-split="h2">Every result points<br>at a record</h2></div>
-              </div>
-            </div>
-
-            <div class="article-module article-columns">
-              <div class="the-grid">
-                <ul class="items" data-cols="2">
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-doc"/></svg>
-                    <div class="heading">Traced to the source</div>
-                    <div class="desc type-body-xs">Every finding names the records it rests on, where each one came from in your books or your file, and the fields that matched.</div>
-                  </div></li>
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-scale"/></svg>
-                    <div class="heading">Shown side by side</div>
-                    <div class="desc type-body-xs">The bill and the payment sit side by side with the differences marked, not as a figure you have to trust.</div>
-                  </div></li>
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-eye"/></svg>
-                    <div class="heading">Yours to check</div>
-                    <div class="desc type-body-xs">You can open any record behind a result and check it against your books or the export you uploaded.</div>
-                  </div></li>
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-flag"/></svg>
-                    <div class="heading">Yours to decide</div>
-                    <div class="desc type-body-xs">Nothing goes to a vendor until you approve the recovery, and every step taken after that is logged: who, what, when and why.</div>
-                  </div></li>
-                </ul>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- WHAT IT NEVER ASKS FOR -->
-    <section class="rounded-section" id="never" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-head2">
-              <div class="the-grid">
-                <div class="left"><h2 class="heading type-h3" data-split="h2">What Reclaim<br>never gets</h2></div>
-              </div>
-            </div>
-
-            <div class="article-module article-content">
-              <div class="the-grid">
-                <div class="the-col"><div class="richtext"><p>Three things Reclaim has no use for, and is built never to have.</p></div></div>
-              </div>
-            </div>
-
-            <div class="article-module article-columns has-bg">
-              <div class="the-grid">
-                <ul class="items" data-cols="2">
-                  <li class="type-article-columns-item-card1 item-wrap"><div class="article-columns-item-card1 item">
-                    <div class="top"><div class="images"><svg class="icon" aria-hidden="true"><use href="#i-tile-unlinked"/></svg></div><div class="heading">Your passwords</div></div>
-                    <div class="desc">Connecting QuickBooks Online or Xero happens on their own sign-in and approval screen. Reclaim never asks for your password to your accounting system, your bank or a vendor portal.</div>
-                  </div></li>
-                  <li class="type-article-columns-item-card1 item-wrap"><div class="article-columns-item-card1 item">
-                    <div class="top"><div class="images"><svg class="icon" aria-hidden="true"><use href="#i-tile-nomoney"/></svg></div><div class="heading">Payment authority</div></div>
-                    <div class="desc">Nothing in Reclaim can approve, release or reverse a payment. Whoever holds that authority today still holds it afterwards.</div>
-                  </div></li>
-                  <li class="type-article-columns-item-card1 item-wrap"><div class="article-columns-item-card1 item">
-                    <div class="top"><div class="images"><svg class="icon" aria-hidden="true"><use href="#i-tile-decide"/></svg></div><div class="heading">Your ledger, in an AI prompt</div></div>
-                    <div class="desc">AI never browses your books. The financial engine works out the numbers; AI gets only the few facts one task needs, like the vendor, invoice and amount for a single email.</div>
-                  </div></li>
-                </ul>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- WHAT WE HAVEN'T PUBLISHED YET — the honest placeholder -->
-    <section class="rounded-section" id="pending" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-head2">
-              <div class="the-grid">
-                <div class="left col-4">
-                  <h2 class="heading type-h3" data-split="h2">What we'll publish<br>next</h2>
-                  <div class="body"><div class="richtext">
-                    <p><span class="type-body-headline">Some of what belongs on a security page depends on decisions we are still making about storage.</span></p>
-                    <p></p>
-                    <p>Reclaim is built to keep each customer's data separate, encrypt your financial records and connection tokens, and let you export or delete what it holds. Where that data is kept, how long, and exactly which standards protect it are not settled yet. We would rather leave that blank than write something we might have to correct later. It will be published here as soon as it is settled.</p>
-                  </div></div>
-                </div>
-                <div class="right"><div class="panel square"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></div></div>
-              </div>
-            </div>
-
-            <div class="article-module article-columns">
-              <div class="the-grid">
-                <ul class="items">
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-clock"/></svg>
-                    <div class="heading">Storage</div>
-                    <div class="desc type-body-xs">Where your records are held, and for how long.</div>
-                  </div></li>
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>
-                    <div class="heading">Encryption</div>
-                    <div class="desc type-body-xs">What is encrypted in transit and at rest, named specifically.</div>
-                  </div></li>
-                  <li class="type-generic-item item-wrap"><div class="item article-columns-item-generic type-body-small">
-                    <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
-                    <div class="heading">Deletion</div>
-                    <div class="desc type-body-xs">How you remove your data or disconnect, and what happens then.</div>
-                  </div></li>
-                </ul>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- REPORTING A PROBLEM -->
-    <section class="rounded-section" id="reporting" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-head2">
-              <div class="the-grid">
-                <div class="left col-4">
-                  <h2 class="heading type-h3" data-split="h2">Found<br>something?</h2>
-                  <div class="body"><div class="richtext">
-                    <p>If you think you have found a security problem with this site or with Reclaim, tell us before you tell anyone else. Use the contact form and say that it is a security report.</p>
-                    <p>We don't run a bug bounty programme, and we would rather say that plainly than imply one exists.</p>
-                  </div></div>
-                </div>
-                <div class="right"><div class="panel wide"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></div></div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ELSEWHERE -->
-    <section class="rounded-section" id="elsewhere" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-head2">
-              <div class="the-grid">
-                <div class="left"><h2 class="heading type-h3" data-split="h2">Elsewhere on the site</h2></div>
-              </div>
-            </div>
-
-            <div class="article-module article-columns has-bg">
-              <div class="the-grid">
-                <ul class="items" data-cols="4">
-                  <li class="type-article-columns-item-link item-wrap"><a class="article-columns-item-link item" href="/guides">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-doc"/></svg><div class="heading">Export guides</div>
-                  </a></li>
-                  <li class="type-article-columns-item-link item-wrap"><a class="article-columns-item-link item" href="/what-it-checks#exact-duplicate">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-eye"/></svg><div class="heading">What it checks</div>
-                  </a></li>
-                  <li class="type-article-columns-item-link item-wrap"><a class="article-columns-item-link item" href="/how-it-works">
-                    <svg class="icon" aria-hidden="true"><use href="#i-mark-scale"/></svg><div class="heading">How it works</div>
-                  </a></li>
-                  <li class="type-article-columns-item-link item-wrap"><a class="article-columns-item-link item" href="/pricing">
-                    <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><div class="heading">Pricing</div>
-                  </a></li>
-                </ul>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="article-nav desktop-only">
-      <div class="sticky">
-        <div class="the-container">
-          <div class="the-grid">
-            <div class="the-col">
-              <ul>
-                <li><a class="item" href="#reads"><span class="dot"></span><span class="label type-h6">What it reads</span></a></li>
-                <li><a class="item" href="#evidence"><span class="dot"></span><span class="label type-h6">Evidence</span></a></li>
-                <li><a class="item" href="#never"><span class="dot"></span><span class="label type-h6">Never gets</span></a></li>
-                <li><a class="item" href="#pending"><span class="dot"></span><span class="label type-h6">Publishing next</span></a></li>
-                <li><a class="item" href="#reporting"><span class="dot"></span><span class="label type-h6">Reporting</span></a></li>
-                <li><a class="item" href="#elsewhere"><span class="dot"></span><span class="label type-h6">Elsewhere</span></a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
+<!-- @include closing -->
