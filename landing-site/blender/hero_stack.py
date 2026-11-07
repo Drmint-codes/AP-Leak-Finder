@@ -238,6 +238,16 @@ if A.get('logo') == '1':
             o, _ = K.prism(f'r{p}_{q}', [Vector((-ext, -half)), Vector((ext, -half)), Vector((ext, half)), Vector((-ext, half))], .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)
             o.rotation_euler = (0, 0, math.atan2(d.y, d.x))
             cutter(o, (-W / 2 + .215 * W + (a.x + c.x) / 2, -D / 2 + .3 * D + (a.y + c.y) / 2, hl / 2))
+elif A.get('mark'):
+    # a report's small sign where the title goes (the Research pages): each rectangle is (x, y, length, width)
+    marks = {'bars': [(.1, -.21, .14, .09), (.04, -.07, .26, .09), (-.02, .07, .38, .09), (-.08, .21, .5, .09)],
+             'folder': [(0, 0, .46, .56), (-.27, -.15, .12, .24)],
+             'check': [(-.13, 0, .1, .62), (.05, 0, .1, .62), (.2, .18, .08, .26)],
+             'columns': [(-.21, 0, .08, .62), (0, -.21, .3, .09), (0, -.07, .3, .09), (0, .07, .3, .09), (0, .21, .3, .09), (.2, 0, .08, .66)]}[A['mark']]
+    cx, cy = -W / 2 + .2 * W, -D / 2 + .3 * D
+    for k, (mx, my, ml, mw) in enumerate(marks):
+        o, _ = K.prism(f'mark{k}', rrect(ml, mw, min(ml, mw) * .25, 4), .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)
+        cutter(o, (cx + mx, cy + my, hl / 2), GROOVE)
 else:
     tl = .2 * D
     title, _ = K.prism('title', rrect(.16, tl, .025, 6), .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)

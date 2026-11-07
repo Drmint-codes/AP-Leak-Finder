@@ -15,6 +15,7 @@ Chrome/Firefox/Edge, plus an H.264 MP4 with the section colour baked in for Safa
 | `compare.py` | side-by-side sheet vs reference frames (`path@x0,y0,x1,y1` crops) |
 | `onboardlib.py` | onboarding substance: black clay, cream paper and ruled ledger stock, one glossy green, brass; the Reclaim mark as geometry |
 | `onboarding.py` | the app's onboarding loops (`scene=welcome\|business\|tools\|how\|data\|finale_in\|finale\|ic_*\|card_*`); `card_*` are the two ledger-choice cards on Launch |
+| `render_research.sh` | the Research pages: the hero stack with each report's sign on its lid (`hero_stack.py` with `mark=`), shipped to `../media/research/` |
 | `render_wc.sh` | the What It Checks page: one object per check (`wc_models.py`), shipped to `../media/checks/` |
 | `render_hiw.sh` | the How It Works page: its logo (`hero_stack.py` with `logo=1`, the stack in ink and green with the R on its lid) and four step models (`hiw_models.py`), shipped to `../media/hiw/` |
 | `render_onboarding.sh` | renders every onboarding loop and ships it to `public/onboarding/` (WebM + dark/light MP4 + poster) |
@@ -206,7 +207,7 @@ written into styles.css (`.fd-tile[data-ex]`, sampled from the stills): a palett
 
 ## The closing object
 
-The closing section now shows a blue return arrow curving around a coral coin: `wc_models.py scene=closing fps=30 frames=1 res=2000 spp=96 shade=.24 fill=.4`, cropped to its shadow and saved as `media/closing/return-*.webp`. The coin stack below it is no longer used.
+The closing section now shows the mark as a stack of records with the green one out: the How It Works logo loop (`hero_stack.py logo=1`, frames 1–163) cropped to the stack and saved as `media/closing/mark.webm` (alpha), `mark.mp4` (baked on the closing's white, for Safari) and the `mark-*.webp` posters. The coin stack below it is no longer used.
 
 ### The earlier coin stack
 
