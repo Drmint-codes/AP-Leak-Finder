@@ -15,6 +15,9 @@ Chrome/Firefox/Edge, plus an H.264 MP4 with the section colour baked in for Safa
 | `compare.py` | side-by-side sheet vs reference frames (`path@x0,y0,x1,y1` crops) |
 | `onboardlib.py` | onboarding substance: black clay, cream paper and ruled ledger stock, one glossy green, brass; the Reclaim mark as geometry |
 | `onboarding.py` | the app's onboarding loops (`scene=welcome\|business\|tools\|how\|data\|finale_in\|finale\|ic_*\|card_*`); `card_*` are the two ledger-choice cards on Launch |
+| `render_research.sh` | the Research pages: the hero stack with each report's sign on its lid (`hero_stack.py` with `mark=`), shipped to `../media/research/` |
+| `render_wc.sh` | the What It Checks page: one object per check (`wc_models.py`), shipped to `../media/checks/` |
+| `render_hiw.sh` | the How It Works page: its logo (`hero_stack.py` with `logo=1`, the stack in ink and green with the R on its lid) and four step models (`hiw_models.py`), shipped to `../media/hiw/` |
 | `render_onboarding.sh` | renders every onboarding loop and ships it to `public/onboarding/` (WebM + dark/light MP4 + poster) |
 | `poster.py` | first frame as a transparent WebP (`<video poster>`, reduced motion) |
 | `grid.py` | contact sheet of frames at any aspect, for reviewing a batch at once |
@@ -202,7 +205,11 @@ poster), `still.webp` and `still-m.webp`. Only the stills are published (`media/
 writes the films and posters there too, so delete them again. Each tile sits on its still's floor colour,
 written into styles.css (`.fd-tile[data-ex]`, sampled from the stills): a palette change means changing those.
 
-## The closing coin stack
+## The closing object
+
+The closing section now shows the mark as a stack of records with the green one out: the How It Works logo loop (`hero_stack.py logo=1`, frames 1–163) cropped to the stack and saved as `media/closing/mark.webm` (alpha), `mark.mp4` (baked on the closing's white, for Safari) and the `mark-*.webp` posters. The coin stack below it is no longer used.
+
+### The earlier coin stack
 
 The closing section above the footer (`src/partials/closing.html`, on every page that ends with a call to
 action) shows the echo exhibit's single stack at rest, cut out so it sits straight on the page with its own

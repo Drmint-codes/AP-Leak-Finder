@@ -1,5 +1,5 @@
 /* The log-in and sign-up pages, set in the marketing site's system (landing-site/styles.css):
-   the hero's 3D loop on white, and the black rounded section that follows the
+   the hero's 3D loop on its paper, and the black rounded section that follows the
    hero turned on its side. `--r` is the landing's rem (10px at 1440 wide), so
    every size below reads like the landing's own `Nrem` values. */
 
@@ -26,7 +26,7 @@
   display: grid;
   grid-template-columns: 60fr 40fr;
   min-height: 100dvh;
-  background: var(--white);
+  background: #eeebe4;              /* the hero film's floor, as browsers draw it */
   color: var(--black);
   font-family: var(--f-sans);
   font-size: calc(var(--r) * 1.6);
@@ -69,6 +69,11 @@
   aspect-ratio: 1 / 1;
   object-fit: contain;
   transform: translateY(2%);
+  /* the film is flattened on its floor colour; fading its edges keeps a codec shift from showing a seam */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 97%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 97%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
   animation: rc-reel-in 1s var(--ease-out) 0.2s both;
 }
 @keyframes rc-reel-in { from { opacity: 0; transform: translateY(12%); } }
@@ -86,11 +91,9 @@
 .rc-login-legal a { transition: color 0.3s ease-in-out; }
 .rc-login-legal a:hover { color: var(--black); }
 
-/* logo, as .hx-logo: the hexagon fills with green on hover */
+/* logo, as .hx-logo: the mark floods green on hover */
 .rc-logo { --h: calc(var(--r) * 2.4); display: flex; align-items: center; gap: calc(var(--h) * 0.28); height: var(--h); }
-.rc-logo svg { height: 100%; width: auto; overflow: visible; }
-.rc-logo .fill { fill: var(--reclaim); clip-path: inset(100% 0 0 0); transition: clip-path 0.6s var(--ease-roll); }
-.rc-logo:hover .fill { clip-path: inset(-10% 0 0 0); transition-duration: 1s; }
+.rc-logo svg { height: 125%; width: auto; overflow: visible; --reclaim-splash: var(--reclaim); }
 .rc-logo span { font-size: calc(var(--h) * 1.02); font-weight: 650; letter-spacing: -0.045em; line-height: 1; }
 
 /* ---------- right: the black section ---------- */

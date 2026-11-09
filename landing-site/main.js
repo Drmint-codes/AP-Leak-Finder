@@ -384,11 +384,11 @@
   // (reduced motion: the logo fades in where it stands)
   const logoReset = logo => {
     if (calm) { gsap.set(logo, { opacity: 0 }); return; }
-    gsap.set($('.wheel', logo), { scale: 0, rotation: 216, transformOrigin: '50% 50%' });
+    gsap.set($('.wheel', logo), { scale: .6, yPercent: -40, opacity: 0, transformOrigin: '50% 100%' });
     gsap.set($$('.letter', logo), { xPercent: 50, yPercent: 150 });
   };
   const logoIn = logo => calm ? gsap.to(logo, { opacity: 1, duration: .5 }) : gsap.timeline({ defaults: { duration: 1, ease: 'power2.out' } })
-    .to($('.wheel', logo), { scale: 1, rotation: 0 }, 0)
+    .to($('.wheel', logo), { scale: 1, yPercent: 0, opacity: 1 }, 0)
     .to($$('.letter', logo), { xPercent: 0, yPercent: 0, stagger: .1 }, .1);
   const navLogos = $$('.the-nav .hx-logo');
   const footLogo = $('.the-footer .hx-logo');
@@ -398,14 +398,14 @@
     ScrollTrigger.create({ trigger: '.the-footer', start: 'top 80%', onEnter: () => logoIn(footLogo), onLeaveBack: () => logoReset(footLogo) });
   }
 
-  // hover: the hexagon fills with green like water. A green copy of the wheel is clipped
-  // by a wave (period 13, amplitude 2, wheel units) that drifts sideways while its level rises.
+  // hover: the mark floods with green like water. A one-colour copy of the mark is clipped
+  // by a wave (period 13, amplitude 2, in the logo's 26 x 23 units) that drifts sideways while its level rises.
   const WAVE = 'M-26 0Q-22.75-4-19.5 0T-13 0T-6.5 0T0 0T6.5 0T13 0T19.5 0T26 0T32.5 0T39 0T45.5 0T52 0V60H-26Z';
   $$('.hx-logo').forEach((logo, i) => {
     const wheel = $('.wheel', logo);
-    wheel.insertAdjacentHTML('beforeend', `<clipPath id="hx-water-${i}"><path class="water" d="${WAVE}"/></clipPath><g clip-path="url(#hx-water-${i})"><use class="fill" href="#hx-wheel"/></g>`);
+    wheel.insertAdjacentHTML('beforeend', `<clipPath id="hx-water-${i}"><path class="water" d="${WAVE}"/></clipPath><g clip-path="url(#hx-water-${i})"><use class="fill" href="#hx-wheel-solid"/></g>`);
     const water = $('.water', wheel);
-    gsap.set(water, { x: 0, y: 26 });   // empty: crest sits below the wheel
+    gsap.set(water, { x: 0, y: 26 });   // empty: crest sits below the mark
     const drift = gsap.to(water, { x: -13, duration: 1.2, ease: 'none', repeat: -1, paused: true });
     let level;
     logo.addEventListener('pointerenter', e => {
@@ -792,4 +792,80 @@
     if (target) requestAnimationFrame(() => scrollToTarget(target, true));
   };
   boot();
+})();
+
+// How It Works: the one MacBook's screen follows whichever step is in the middle of the window
+(() => {
+  const steps = document.querySelectorAll('.hiw-step[data-step]');
+  const slides = document.querySelectorAll('.hiw-slide');
+  if (!steps.length) return;
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      slides.forEach((slide) => slide.classList.toggle('is-on', slide.dataset.slide === e.target.dataset.step));
+    }
+  }, { rootMargin: '-45% 0px -45% 0px' });
+  steps.forEach((step) => io.observe(step));
+})();
+
+// What It Checks: pick a check to see what it catches. Below 1024px, or without this, every check shows in order.
+(() => {
+  const grid = document.querySelector('.wc-explorer-grid');
+  if (!grid) return;
+  const tabs = [...grid.querySelectorAll('.wc-tab')];
+  const panels = [...grid.querySelectorAll('.wc-panel')];
+  grid.classList.add('is-live');
+  const show = (id) => {
+    if (!panels.some((panel) => panel.id === id)) return false;
+    panels.forEach((panel) => panel.classList.toggle('is-on', panel.id === id));
+    tabs.forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.target === id)));
+    return true;
+  };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => {
+      show(tab.dataset.target);
+      history.replaceState(null, '', `#${tab.dataset.target}`);
+    });
+    tab.addEventListener('keydown', (e) => {
+      const step = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      const next = tabs[(i + step + tabs.length) % tabs.length];
+      next.focus();
+      next.click();
+    });
+  });
+  const fromHash = () => {
+    if (!show(location.hash.slice(1))) return;
+    if (matchMedia('(min-width: 1024px)').matches) document.getElementById('checks').scrollIntoView({ behavior: 'smooth' });
+  };
+  addEventListener('hashchange', fromHash);
+  fromHash();
+})();
+
+// Pricing: what Growth and Flat would each cost for a month's recoveries. Keep in step with server/plans.ts.
+(() => {
+  const box = document.querySelector('[data-pr-calc]');
+  if (!box) return;
+  const input = box.querySelector('input');
+  const money = (n) => `$${Math.round(n).toLocaleString('en-US')}`;
+  const cell = (plan) => document.querySelector(`[data-pr-plan="${plan}"]`);
+  const update = () => {
+    const back = Number(input.value);
+    const growth = 15 + back * 0.1;
+    const flat = 50;
+    const top = Math.max(growth, flat);
+    box.querySelector('[data-pr-amount]').textContent = money(back);
+    for (const [plan, cost] of [['growth', growth], ['flat', flat]]) {
+      const el = cell(plan);
+      el.querySelector('[data-pr-cost]').textContent = money(cost);
+      el.classList.toggle('is-less', cost < Math.min(growth, flat) + 0.001 && growth !== flat);
+      el.style.setProperty('--h', (cost / top).toFixed(3));
+    }
+    box.querySelector('[data-pr-note]').textContent = growth === flat
+      ? 'At $350 a month, they cost the same.'
+      : `${growth < flat ? 'Growth' : 'Flat'} costs ${money(Math.abs(growth - flat))} less that month.`;
+  };
+  input.addEventListener('input', update);
+  update();
 })();

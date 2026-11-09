@@ -54,8 +54,13 @@
   <symbol id="i-shield" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"><path d="M13.33 8.67c0 3.33-2.33 5-5.1 5.97a.67.67 0 0 1-.46 0c-2.77-.97-5.1-2.64-5.1-5.97V4a.67.67 0 0 1 .66-.67c1.34 0 3-.8 4.16-1.81a.68.68 0 0 1 .88 0C9.54 2.54 11.2 3.33 12.53 3.33A.67.67 0 0 1 13.2 4z"/><path d="m6 8 1.33 1.33L10 6.67"/></g></symbol>
   <symbol id="i-search" viewBox="0 0 16 16"><path d="m14 14-2.867-2.867m1.534-3.8A5.333 5.333 0 1 1 2 7.333a5.333 5.333 0 0 1 10.667 0" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-chevron" viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/></symbol>
-  <symbol id="hx-wheel" viewBox="-13 -11.5 26 23">
-    <path d="M-2.056,-4.6 L-5.751,-11 L5.751,-11 L2.056,-4.6 Z"/><path d="M2.956,-4.081 L6.651,-10.481 L12.402,-0.520 L5.012,-0.520 Z"/><path d="M5.012,0.520 L12.402,0.520 L6.651,10.481 L2.956,4.081 Z"/><path d="M2.056,4.6 L5.751,11 L-5.751,11 L-2.056,4.6 Z"/><path d="M-2.956,4.081 L-6.651,10.481 L-12.402,0.520 L-5.012,0.520 Z"/><path d="M-5.012,-0.520 L-12.402,-0.520 L-6.651,-10.481 L-2.956,-4.081 Z"/>
+  <symbol id="hx-wheel" viewBox="7 7 106 98">
+    <!-- Reclaim mark: three stacked ledger slabs, the R cut through the top, the recovered layer in green. scripts/reclaim-mark.py -->
+    <mask id="hx-wheel-r" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120"><rect width="120" height="120" fill="#fff"/><path transform="matrix(.5 -.25 .5 .25 10 35)" d="M29 80V22h22a15.5 15.5 0 0 1 0 31H29m20 0 22 27" fill="none" stroke="#000" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/></mask><g stroke-width="5" stroke-linejoin="round" mask="url(#hx-wheel-r)"><path d="M10 35 60 10l50 25-50 25Z" fill="currentColor" stroke="currentColor"/><path d="M10 45 60 70l50-25v4L60 74 10 49Z" fill="currentColor" stroke="currentColor"/><path d="M10 59 60 84l50-25v4L60 88 10 63Z" fill="#00E487" stroke="#00E487"/><path d="M10 73 60 98l50-25v4L60 102 10 77Z" fill="currentColor" stroke="currentColor"/></g>
+  </symbol>
+  <symbol id="hx-wheel-solid" viewBox="7 7 106 98">
+    <!-- the same mark in one colour, for the green splash on hover -->
+    <mask id="hx-wheel-solid-r" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120"><rect width="120" height="120" fill="#fff"/><path transform="matrix(.5 -.25 .5 .25 10 35)" d="M29 80V22h22a15.5 15.5 0 0 1 0 31H29m20 0 22 27" fill="none" stroke="#000" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/></mask><g stroke-width="5" stroke-linejoin="round" mask="url(#hx-wheel-solid-r)"><path d="M10 35 60 10l50 25-50 25Z" fill="currentColor" stroke="currentColor"/><path d="M10 45 60 70l50-25v4L60 74 10 49Z" fill="currentColor" stroke="currentColor"/><path d="M10 59 60 84l50-25v4L60 88 10 63Z" fill="currentColor" stroke="currentColor"/><path d="M10 73 60 98l50-25v4L60 102 10 77Z" fill="currentColor" stroke="currentColor"/></g>
   </symbol>
   <!-- dashboard mock-ups: the lucide icons the workspace uses (src/workspace/WorkspaceShell.tsx) -->
   <symbol id="d-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></g></symbol>
@@ -110,102 +115,90 @@
 
 <main class="page">
 
-  <!-- HUB HERO: white strip for the nav, then the black panel -->
-  <section class="guides-hero">
+  <!-- The hub: one card per system guide. The guides themselves are the pages in this folder. -->
+  <section class="gd-hero" theme="grey">
+    <div class="nav-slot" data-theme="grey"></div>
+    <div class="gd-hero-copy">
+      <div class="eyebrow type-mono">Guides</div>
+      <h1 class="type-h1" data-split="h1">Export your payments from the system you already use.</h1>
+      <p class="type-body-large">Each guide walks through the exact reports to run and the files to upload, step by step. Nothing to install, and nothing connects to your books. Direct connections are in development.</p>
+    </div>
+  </section>
+
+  <section class="gd-list" theme="grey">
+    <div class="nav-slot" data-theme="grey"></div>
+    <ol class="gd-grid">
+      <li><a class="gd-card" href="/guides/quickbooks-online">
+        <span class="type-mono">01</span>
+        <b>QuickBooks Online</b>
+        <p>Four reports, each exported to Excel or CSV.</p>
+        <span class="gd-go">Read the guide<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a class="gd-card" href="/guides/xero">
+        <span class="type-mono">02</span>
+        <b>Xero</b>
+        <p>The reports and exports to run, in order.</p>
+        <span class="gd-go">Read the guide<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a class="gd-card" href="/guides/netsuite">
+        <span class="type-mono">03</span>
+        <b>NetSuite</b>
+        <p>Saved searches and the exports Reclaim reads.</p>
+        <span class="gd-go">Read the guide<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a class="gd-card" href="/guides/bill">
+        <span class="type-mono">04</span>
+        <b>BILL</b>
+        <p>The exports to pull and how to check them.</p>
+        <span class="gd-go">Read the guide<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a class="gd-card is-other" href="#contact" data-modal="talk">
+        <span class="type-mono">Another system</span>
+        <b>Can’t find yours?</b>
+        <p>Tell us what you use. Most systems export the same files under different names, and we’ll point you to the right ones.</p>
+        <span class="gd-go">Talk to us<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+    </ol>
+  </section>
+
+  <section class="gd-next" theme="white">
     <div class="nav-slot" data-theme="white"></div>
-    <div class="panel">
-      <div class="the-container">
-        <div class="the-grid">
-          <p class="kicker guides-kicker">Reclaim guides</p>
-          <h1 class="title">What do you need to export?</h1>
-          <p class="desc">Find the right records in your accounting system and export them.</p>
-          <form class="search" role="search" onsubmit="return false">
-            <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
-            <input type="search" placeholder="Search the guides…" aria-label="Search the guides">
-            <button type="submit" class="go">Search</button>
-          </form>
-        </div>
-      </div>
-    </div>
+    <div class="section-head"><div class="eyebrow type-mono">After the export</div><h2 class="type-h2" data-split="h2">What happens once the file is in.</h2></div>
+    <ul class="gd-next-grid">
+      <li><a href="/how-it-works"><span class="type-mono">01</span><b>How it works</b><p>Upload, check, confirm, recover: the whole process in six steps.</p></a></li>
+      <li><a href="/what-it-checks"><span class="type-mono">02</span><b>What it checks</b><p>The eight checks Reclaim runs, with an example of each from the sample ledger.</p></a></li>
+      <li><a href="/security"><span class="type-mono">03</span><b>Security</b><p>What Reclaim reads, what it never gets, and what it can never do with your records.</p></a></li>
+    </ul>
   </section>
 
-  <!-- START HERE: pick your accounting system -->
-  <section class="guides-start">
+  <!-- CLOSING (white): the mark, as a stack of records with the green one out (blender/hero_stack.py logo=1: the How It Works logo loop, cropped; the Safari MP4 is baked on this section’s white); one action, the three promises under it -->
+  <section class="section closing" theme="white" data-closing>
+    <div class="nav-slot" data-theme="white"></div>
     <div class="the-container">
-      <div class="the-grid">
-        <div class="card">
-          <div class="copy">
-            <p class="kicker guides-kicker"><span class="mark" aria-hidden="true"></span>Start here</p>
-            <h2 class="title">Exporting your records</h2>
-            <p class="desc">Reclaim reads four exports: bills, payments, vendors and credits. Direct connections are in development. Pick your system for the steps.</p>
-            <ul class="systems">
-              <li class="guides-system"><a class="inner" href="/guides/quickbooks-online">
-                <span class="name-badge">QuickBooks</span>
-                <span class="badge"><span class="dot" aria-hidden="true"></span>Guide ready</span>
-                <span class="go">View guide <span aria-hidden="true">&rarr;</span></span>
-              </a></li>
-              <li class="guides-system"><a class="inner" href="/guides/xero">
-                <span class="name-badge">Xero</span>
-                <span class="badge"><span class="dot" aria-hidden="true"></span>Guide ready</span>
-                <span class="go">View guide <span aria-hidden="true">&rarr;</span></span>
-              </a></li>
-              <li class="guides-system"><a class="inner" href="/guides/netsuite">
-                <span class="name-badge">NetSuite</span>
-                <span class="badge"><span class="dot" aria-hidden="true"></span>Guide ready</span>
-                <span class="go">View guide <span aria-hidden="true">&rarr;</span></span>
-              </a></li>
-              <li class="guides-system"><a class="inner" href="/guides/bill">
-                <span class="name-badge">Bill</span>
-                <span class="badge"><span class="dot" aria-hidden="true"></span>Guide ready</span>
-                <span class="go">View guide <span aria-hidden="true">&rarr;</span></span>
-              </a></li>
-            </ul>
-            <p class="guides-empty kicker--foot" hidden>No guide matches that yet. Tell us what you use.</p>
-          </div>
-          <div class="mark-art" aria-hidden="true"><svg viewBox="0 0 26 23" fill="currentColor"><use href="#hx-wheel"/></svg></div>
-        </div>
+      <video class="closing-object" data-reel data-page-baked src="/media/closing/mark.webm" poster="/media/closing/mark-720.webp" width="720" height="401" loop muted playsinline preload="metadata" aria-hidden="true"></video>
+      <h2 class="heading type-h2" data-split="h2">Don't just find the money.<br><em>Reclaim it.</em></h2>
+      <p class="closing-lede" data-closing-in>Upload an export and see what your own records show.</p>
+      <div class="closing-actions" data-closing-in>
+        <a href="/audit?entry=sample" class="cta cta-button" size="large" theme="green"><span class="hover-loop"><span class="inner">Run a free audit</span></span></a>
+        <a href="#contact" class="closing-talk" data-modal="talk">Not sure where to start? <span>Talk to us</span></a>
       </div>
-    </div>
-  </section>
-
-  <!-- THREE CARDS -->
-  <section class="guides-cards">
-    <div class="the-container">
-      <div class="the-grid">
-        <ul class="grid">
-          <li class="card"><a class="inner" href="#contact" data-modal="talk">
-            <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>
-            <h3 class="title">Contact us</h3>
-            <p class="desc">Not sure which export you need? Tell us what system you use.</p>
-          </a></li>
-          <li class="card"><a class="inner" href="/security">
-            <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>
-            <h3 class="title">Security</h3>
-            <p class="desc">What Reclaim reads, connected or uploaded, and what it can never do with it.</p>
-          </a></li>
-          <li class="card"><a class="inner" href="/what-it-checks#duplicate-payments">
-            <svg class="icon" aria-hidden="true"><use href="#i-mark-eye"/></svg>
-            <h3 class="title">What it finds</h3>
-            <p class="desc">The five things Reclaim looks for, with examples and the records behind each one.</p>
-          </a></li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- CLOSING BAND -->
-  <section class="guides-band">
-    <div class="the-container">
-      <div class="the-grid">
-        <div class="copy">
-          <p class="kicker guides-kicker"><span class="mark" aria-hidden="true"></span>Another system</p>
-          <h2 class="title">Can't find yours?</h2>
-          <p class="desc">If your system isn't listed, tell us what you use. Most of them export the same four files under different names.</p>
-        </div>
-        <div class="action">
-          <a href="#contact" class="cta cta-button has-arrow" size="large" theme="white" data-modal="talk"><span class="hover-loop right"><span class="inner">Talk to us<svg class="icon"><use href="#i-arrow"/></svg></span></span></a>
-        </div>
-      </div>
+      <ul class="closing-promises">
+        <li data-closing-in>
+          <span class="closing-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span>
+          <h3>Never changes your books</h3>
+          <p>Reclaim works from the records you give it. It cannot move money or alter your ledger.</p>
+        </li>
+        <li data-closing-in>
+          <span class="closing-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5 20 4l-4 16-4.5-6.5z"/><path d="m11.5 13.5 3-3"/></svg></span>
+          <h3>Nothing sent without you</h3>
+          <p>Every message to a vendor waits for your approval. Nothing reaches a vendor until you say so.</p>
+        </li>
+        <li data-closing-in>
+          <span class="closing-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5v9M14.5 9.8c-.6-.8-1.6-1.1-2.7-1.1-1.4 0-2.3.7-2.3 1.7 0 2.4 5 1.2 5 3.6 0 1.1-1 1.8-2.4 1.8-1.2 0-2.2-.4-2.8-1.2"/></svg></span>
+          <h3>Refunds come to you</h3>
+          <p>Refunds and credits go straight to you. Reclaim never holds recovered funds.</p>
+        </li>
+      </ul>
     </div>
   </section>
 

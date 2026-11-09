@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pricing — Reclaim</title>
-<meta name="description" content="Proposed Reclaim plans: Free, Growth at $15 a month plus a proposed 10% success fee, and Flat at $50 a month. Success-fee billing is disabled pending a verified return and approval policy.">
+<meta name="description" content="Reclaim has three plans. Free shows what you're owed; Growth is $15 a month with a proposed 10% success fee; Flat is $50 a month with no success fee. Refunds and credits go straight to you.">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,8 +54,13 @@
   <symbol id="i-shield" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"><path d="M13.33 8.67c0 3.33-2.33 5-5.1 5.97a.67.67 0 0 1-.46 0c-2.77-.97-5.1-2.64-5.1-5.97V4a.67.67 0 0 1 .66-.67c1.34 0 3-.8 4.16-1.81a.68.68 0 0 1 .88 0C9.54 2.54 11.2 3.33 12.53 3.33A.67.67 0 0 1 13.2 4z"/><path d="m6 8 1.33 1.33L10 6.67"/></g></symbol>
   <symbol id="i-search" viewBox="0 0 16 16"><path d="m14 14-2.867-2.867m1.534-3.8A5.333 5.333 0 1 1 2 7.333a5.333 5.333 0 0 1 10.667 0" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-chevron" viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/></symbol>
-  <symbol id="hx-wheel" viewBox="-13 -11.5 26 23">
-    <path d="M-2.056,-4.6 L-5.751,-11 L5.751,-11 L2.056,-4.6 Z"/><path d="M2.956,-4.081 L6.651,-10.481 L12.402,-0.520 L5.012,-0.520 Z"/><path d="M5.012,0.520 L12.402,0.520 L6.651,10.481 L2.956,4.081 Z"/><path d="M2.056,4.6 L5.751,11 L-5.751,11 L-2.056,4.6 Z"/><path d="M-2.956,4.081 L-6.651,10.481 L-12.402,0.520 L-5.012,0.520 Z"/><path d="M-5.012,-0.520 L-12.402,-0.520 L-6.651,-10.481 L-2.956,-4.081 Z"/>
+  <symbol id="hx-wheel" viewBox="7 7 106 98">
+    <!-- Reclaim mark: three stacked ledger slabs, the R cut through the top, the recovered layer in green. scripts/reclaim-mark.py -->
+    <mask id="hx-wheel-r" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120"><rect width="120" height="120" fill="#fff"/><path transform="matrix(.5 -.25 .5 .25 10 35)" d="M29 80V22h22a15.5 15.5 0 0 1 0 31H29m20 0 22 27" fill="none" stroke="#000" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/></mask><g stroke-width="5" stroke-linejoin="round" mask="url(#hx-wheel-r)"><path d="M10 35 60 10l50 25-50 25Z" fill="currentColor" stroke="currentColor"/><path d="M10 45 60 70l50-25v4L60 74 10 49Z" fill="currentColor" stroke="currentColor"/><path d="M10 59 60 84l50-25v4L60 88 10 63Z" fill="#00E487" stroke="#00E487"/><path d="M10 73 60 98l50-25v4L60 102 10 77Z" fill="currentColor" stroke="currentColor"/></g>
+  </symbol>
+  <symbol id="hx-wheel-solid" viewBox="7 7 106 98">
+    <!-- the same mark in one colour, for the green splash on hover -->
+    <mask id="hx-wheel-solid-r" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120"><rect width="120" height="120" fill="#fff"/><path transform="matrix(.5 -.25 .5 .25 10 35)" d="M29 80V22h22a15.5 15.5 0 0 1 0 31H29m20 0 22 27" fill="none" stroke="#000" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/></mask><g stroke-width="5" stroke-linejoin="round" mask="url(#hx-wheel-solid-r)"><path d="M10 35 60 10l50 25-50 25Z" fill="currentColor" stroke="currentColor"/><path d="M10 45 60 70l50-25v4L60 74 10 49Z" fill="currentColor" stroke="currentColor"/><path d="M10 59 60 84l50-25v4L60 88 10 63Z" fill="currentColor" stroke="currentColor"/><path d="M10 73 60 98l50-25v4L60 102 10 77Z" fill="currentColor" stroke="currentColor"/></g>
   </symbol>
   <!-- dashboard mock-ups: the lucide icons the workspace uses (src/workspace/WorkspaceShell.tsx) -->
   <symbol id="d-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></g></symbol>
@@ -110,205 +115,178 @@
 
 <main class="page">
 
-  <!-- PRICING.
-       The three plans as defined in server/plans.ts (the app's source of truth): Free, Growth at $15/month
-       plus 10% of money actually recovered, Flat at $50/month with no success fee. Keep this page in step with
-       that file. These are proposed website prices; verify deployment and Stripe configuration before calling checkout live. -->
-
-  <!-- HERO (black): the pricing idea in one line, with jump rows -->
-  <section class="section hero-solutions" theme="black">
+  <!-- PRICING. The three plans as defined in server/plans.ts (the app's source of truth): Free, Growth at $15/month
+       plus 10% of money actually recovered, Flat at $50/month with no success fee. Keep this page in step with that
+       file. Billing is not live yet, so paid plans route to Talk to Us. The 3D is blender/wc_models.py. -->
+  <section class="px-hero" theme="black">
     <div class="nav-slot" data-theme="black"></div>
-    <div class="the-container">
-      <div class="the-grid">
-        <div class="content">
-          <h1 class="heading heading1 type-h2" data-split="h1">You keep what<br>comes <span class="highlight">back</span></h1>
-          <p class="desc type-body-medium cl-grey-500">Start with checks of your uploaded records. Growth and Flat show proposed paid pricing; availability depends on billing configuration. The proposed success fee is not being billed from customer-entered returns. Refunds and credits go directly to you.</p>
-          <ul class="links">
-            <li><a href="#plans" class="hero-services-nav-item type-h4" data-idx="0"><span class="heading">Plans</span><span class="hover-loop down-right cta-button-square cta" theme="outline" size="large"><span class="inner"><svg class="icon"><use href="#i-arrow-dr"/></svg></span></span><span class="line"><span class="line-bg"></span></span></a></li>
-            <li><a href="#lifecycle" class="hero-services-nav-item type-h4" data-idx="1"><span class="heading">What counts as recovered</span><span class="hover-loop down-right cta-button-square cta" theme="outline" size="large"><span class="inner"><svg class="icon"><use href="#i-arrow-dr"/></svg></span></span><span class="line"><span class="line-bg"></span></span></a></li>
-            <li><a href="#faq" class="hero-services-nav-item type-h4" data-idx="2"><span class="heading">FAQ</span><span class="hover-loop down-right cta-button-square cta" theme="outline" size="large"><span class="inner"><svg class="icon"><use href="#i-arrow-dr"/></svg></span></span><span class="line"><span class="line-bg"></span></span></a></li>
-          </ul>
-        </div>
+    <div class="px-hero-top">
+      <div class="type-mono px-eyebrow">Pricing</div>
+      <h1 class="type-h1" data-split="h1">Pay when the money<br>comes <em>back.</em></h1>
+      <p class="type-body-large">Start free and see what you’re owed. Then choose a small fee plus a share of what comes back, or one flat price with no share at all.</p>
+    </div>
+    <ol class="px-plans">
+      <li class="px-plan" data-plan="free">
+        <div class="px-plan-name type-mono">Free</div>
+        <div class="px-plan-price"><b>$0</b><span>per month</span></div>
+        <div class="px-plan-rate">No success fee</div>
+        <p class="px-plan-tag">See what you’re owed before you pay anything.</p>
+        <ul class="px-plan-list"><li>Unlimited ledger uploads</li><li>All eight checks on every file</li><li>The three smallest findings of each upload, in full</li><li>Recovery letters you can edit</li><li>Send approved requests from your own Gmail</li></ul>
+        <a href="/signup" class="cta cta-button px-cta" size="large" theme="white"><span class="hover-loop"><span class="inner">Start free</span></span></a>
+      </li>
+      <li class="px-plan is-featured" data-plan="growth">
+        <div class="px-plan-name type-mono">Growth</div>
+        <div class="px-plan-price"><b>$15</b><span>per month</span></div>
+        <div class="px-plan-rate"><b>Proposed 10%</b> success fee. Currently disabled.</div>
+        <p class="px-plan-tag">Every finding and the whole recovery workflow. Pay when you get paid.</p>
+        <ul class="px-plan-list"><li>Every finding in every audit, nothing hidden</li><li>AI-drafted recovery emails from the exact records</li><li>Approvals, follow-ups, partial returns and full case history</li><li>Every-vendor reports and accounting closeout</li><li>Unlimited uploads and re-audits</li></ul>
+        <a href="#contact" class="cta cta-button px-cta" size="large" theme="green" data-modal="talk"><span class="hover-loop"><span class="inner">Talk to us</span></span></a>
+      </li>
+      <li class="px-plan" data-plan="flat">
+        <div class="px-plan-name type-mono">Flat</div>
+        <div class="px-plan-price"><b>$50</b><span>per month</span></div>
+        <div class="px-plan-rate"><b>No success fee.</b> Every dollar stays with you</div>
+        <p class="px-plan-tag">Everything in Growth for one fixed price you can budget.</p>
+        <ul class="px-plan-list"><li>Everything in Growth</li><li>No share of what comes back, ever</li><li>One number in the budget</li><li>Costs less than Growth past $350 a month recovered</li></ul>
+        <a href="#contact" class="cta cta-button px-cta" size="large" theme="white" data-modal="talk"><span class="hover-loop"><span class="inner">Talk to us</span></span></a>
+      </li>
+    </ol>
+    <ul class="px-terms">
+      <li>Refunds and credits go straight to you</li>
+      <li>The proposed success fee is currently disabled</li>
+      <li>You approve before anything reaches a vendor</li>
+      <li>Cancel any time, in the product</li>
+    </ul>
+    <p class="px-pilot">Paid plans open with our supervised pilots, and nothing is charged until then. <a href="#contact" data-modal="talk">Tell us about your business</a></p>
+  </section>
+
+  <section class="px-calc" theme="grey" aria-labelledby="px-calc-title">
+    <div class="nav-slot" data-theme="grey"></div>
+    <div class="px-calc-grid">
+      <div class="px-calc-copy">
+        <div class="type-mono px-eyebrow">Your month</div>
+        <h2 class="type-h2" id="px-calc-title">Which paid plan costs you less?</h2>
+        <p class="type-body-large">Drag to how much money you expect back in a month. The cheaper plan lights up.</p>
+        <form class="px-calc-form" data-pr-calc onsubmit="return false">
+          <label for="px-amount">Money that comes back in a month</label>
+          <output for="px-amount" data-pr-amount>$1,000</output>
+          <input id="px-amount" type="range" min="0" max="3000" step="50" value="1000">
+          <p class="px-calc-note" data-pr-note>Flat saves you $65 that month.</p>
+        </form>
+      </div>
+      <div class="px-bars" aria-hidden="true">
+        <div class="px-bar" data-pr-plan="growth"><div class="px-bar-fill"><span data-pr-cost>$115</span></div><b>Growth</b><small>$15 + 10%</small></div>
+        <div class="px-bar" data-pr-plan="flat"><div class="px-bar-fill"><span data-pr-cost>$50</span></div><b>Flat</b><small>No share</small></div>
       </div>
     </div>
   </section>
 
-  <div class="article-sections hide-nav">
+  <section class="px-deeps" theme="white">
+    <div class="nav-slot" data-theme="white"></div>
+    <div class="px-section-head">
+      <div class="type-mono px-eyebrow">Each plan, in depth</div>
+      <h2 class="type-h2" data-split="h2">What each price gets you, and why.</h2>
+    </div>
 
-    <!-- PLANS: Free, Growth, Flat (server/plans.ts). Growth and Flat have the same features; only the price differs. -->
-    <section class="rounded-section shouldAnimate hide-nav" id="plans" theme="white">
-      <div class="bg bg-top" theme="black"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="full desktop-only divider-block"><div class="the-container"><div class="the-grid"><div class="divider-v"></div></div></div></div>
-          <div class="content">
-
-            <div class="article-module article-head">
-              <div class="the-grid">
-                <div class="the-col"><div class="generic"><div class="icon"><svg aria-hidden="true"><use href="#i-tile-decide"/></svg></div><div class="name type-h5">Plans</div></div></div>
-                <h2 class="type-h3 heading" data-split="h2">Three plans, one rule: you keep what comes back</h2>
-              </div>
-            </div>
-
-            <div class="article-module plan-grid">
-              <div class="the-grid">
-                <ul class="plans">
-
-                  <li class="plan">
-                    <div class="plan-top">
-                      <div class="plan-name type-h5">Free</div>
-                      <p class="plan-note type-body-xs">See what you're owed before you pay anything.</p>
-                      <div class="plan-price"><b>$0</b><span>per month</span></div>
-                    </div>
-                    <ul class="plan-list type-body-xs">
-                      <li><span class="tick" aria-hidden="true"></span>Unlimited ledger uploads, from QuickBooks Online, Xero, Bill, NetSuite or any spreadsheet</li>
-                      <li><span class="tick" aria-hidden="true"></span>Every check runs on every file</li>
-                      <li><span class="tick" aria-hidden="true"></span>The three smallest findings in each upload shown in full</li>
-                      <li><span class="tick" aria-hidden="true"></span>Recovery letters to read and copy</li>
-                      <li><span class="tick" aria-hidden="true"></span>Track what comes back by hand</li>
-                    </ul>
-                    <a href="/signup" class="cta cta-button plan-cta" size="large" theme="grey"><span class="hover-loop"><span class="inner">Start free</span></span></a>
-                  </li>
-
-                  <li class="plan is-featured">
-                    <div class="plan-top">
-                      <div class="plan-name type-h5">Growth</div>
-                      <p class="plan-note type-body-xs">Pay when you get paid.</p>
-                      <div class="plan-price"><b>$15</b><span>per month</span></div>
-                    </div>
-                    <p class="plan-rate">plus <b>10%</b> of money that actually comes back</p>
-                    <ul class="plan-list type-body-xs">
-                      <li><span class="tick" aria-hidden="true"></span>Every finding in every audit, nothing hidden</li>
-                      <li><span class="tick" aria-hidden="true"></span>AI-drafted recovery emails built from the exact records</li>
-                      <li><span class="tick" aria-hidden="true"></span>Approvals, follow-ups, partial returns and full case history</li>
-                      <li><span class="tick" aria-hidden="true"></span>Every-vendor reports and accounting closeout</li>
-                      <li><span class="tick" aria-hidden="true"></span>Unlimited uploads and re-audits</li>
-                    </ul>
-                    <a href="#contact" class="cta cta-button plan-cta" size="large" theme="green" data-modal="talk"><span class="hover-loop"><span class="inner">Talk to Us</span></span></a>
-                  </li>
-
-                  <li class="plan">
-                    <div class="plan-top">
-                      <div class="plan-name type-h5">Flat</div>
-                      <p class="plan-note type-body-xs">Everything in Growth for one predictable price.</p>
-                      <div class="plan-price"><b>$50</b><span>per month</span></div>
-                    </div>
-                    <p class="plan-rate"><b>No</b> success fee: every dollar recovered stays with you</p>
-                    <ul class="plan-list type-body-xs">
-                      <li><span class="tick" aria-hidden="true"></span>Everything in Growth</li>
-                      <li><span class="tick" aria-hidden="true"></span>One fixed monthly cost for budgeting</li>
-                      <li><span class="tick" aria-hidden="true"></span>Costs less than Growth once more than $350 a month comes back</li>
-                    </ul>
-                    <a href="#contact" class="cta cta-button plan-cta" size="large" theme="grey" data-modal="talk"><span class="hover-loop"><span class="inner">Talk to Us</span></span></a>
-                  </li>
-
-                </ul>
-                <ul class="plan-terms type-body-small">
-                  <li><span class="tick" aria-hidden="true"></span>Refunds and credits go straight to you</li>
-                  <li><span class="tick" aria-hidden="true"></span>The 10% applies only to money that actually comes back</li>
-                  <li><span class="tick" aria-hidden="true"></span>You approve before the first vendor email</li>
-                  <li><span class="tick" aria-hidden="true"></span>Cancel any time, in the product</li>
-                </ul>
-                <div class="plan-ask">
-                  <p class="type-body-large">These are proposed plans for a supervised pilot. Confirm price and checkout availability with us before subscribing. Human-managed investigation is scoped separately from the software plan.</p>
-                  <a href="#contact" class="cta cta-button" size="large" theme="black" data-modal="talk"><span class="hover-loop"><span class="inner">Talk to Us</span></span></a>
-                </div>
-              </div>
-            </div>
-
-          </div>
+    <article class="px-deep" id="free">
+      <div class="px-deep-copy">
+        <div class="px-deep-n"><span class="type-mono">01</span><span class="px-deep-name">Free</span></div>
+        <h3>See real results before you pay anything.</h3>
+        <p class="px-deep-lead">Upload your own payments and watch every check run. The three smallest findings of each upload open in full, so you can judge the proof for yourself.</p>
+        <div class="px-deep-cols">
+          <div><b>Why it costs this</b><p>You shouldn’t have to pay to find out whether Reclaim finds anything in your records. Free runs the whole audit; it only limits how many findings open up.</p></div>
+          <div><b>Who it’s for</b><p>Anyone who wants to see what their records show, or a small business happy to work its own recoveries by hand.</p></div>
         </div>
       </div>
-    </section>
+      <div class="px-deep-visual"><div class="px-receipt"><div class="px-rc-head"><span class="type-mono">Example month</span><span class="type-mono">Free</span></div><div class="px-rc-row"><span>Payments checked</span><b>1,284</b></div><div class="px-rc-row"><span>Findings found</span><b>16</b></div><div class="px-rc-row"><span>Findings opened in full</span><b>3</b></div><div class="px-rc-row"><span>Monthly fee</span><b>$0</b></div><div class="px-rc-row"><span>Success fee</span><b>$0</b></div><div class="px-rc-total"><span>You pay</span><b>$0</b></div><div class="px-rc-note">Every check ran. Thirteen findings stay closed until you upgrade.</div></div></div>
+    </article>
 
-    <!-- LIFECYCLE: what "recovered" means -->
-    <section class="rounded-section hide-nav" id="lifecycle" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="content">
-
-            <div class="article-module article-head">
-              <div class="the-grid">
-                <div class="the-col"><div class="generic"><div class="icon"><svg aria-hidden="true"><use href="#i-tile-row"/></svg></div><div class="name type-h5">The Recovery Ledger</div></div></div>
-                <h2 class="type-h3 heading" data-split="h2">Counted when it's back, not when it's found</h2>
-              </div>
-            </div>
-
-            <div class="article-module article-text-image">
-              <div class="the-grid">
-                <div class="left">
-                  <div class="desc type-body-headline">Found money and recovered money are different numbers, and Reclaim never blurs them.</div>
-                  <div class="desc2 type-body-large">A check is a signal, not an amount owed. A person reviews the evidence and approves any supplier request. The Recovery Ledger can record a refund or applied credit entered by your team; independent accounting or bank matching has not been established.</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="article-module stage-row">
-              <div class="the-grid">
-                <ol class="stages">
-                  <li class="stage"><span class="stage-no type-mono">01</span><div class="stage-name type-h5">Discover</div><p class="type-body-xs">Related signals become one case: same vendor, same obligation, both payments settled.</p></li>
-                  <li class="stage"><span class="stage-no type-mono">02</span><div class="stage-name type-h5">Verify</div><p class="type-body-xs">The records are checked against each other until the amount is provable, or marked as needing review.</p></li>
-                  <li class="stage"><span class="stage-no type-mono">03</span><div class="stage-name type-h5">Request</div><p class="type-body-xs">You approve the amount and recipient, contact the supplier, and record replies. Optional Gmail sending needs separate consent and confirmation.</p></li>
-                  <li class="stage is-counted"><span class="stage-no type-mono">04</span><div class="stage-name type-h5">Return recorded</div><p class="type-body-xs">Your team records a refund or applied credit and its reference. The entry is labelled as a customer assertion until independently matched.</p></li>
-                  <li class="stage"><span class="stage-no type-mono">05</span><div class="stage-name type-h5">Reconcile</div><p class="type-body-xs">Reclaim gives you the accounting steps to close the case in your books, and you confirm them.</p></li>
-                </ol>
-              </div>
-            </div>
-
-          </div>
+    <article class="px-deep is-flipped" id="growth">
+      <div class="px-deep-copy">
+        <div class="px-deep-n"><span class="type-mono">02</span><span class="px-deep-name">Growth</span></div>
+        <h3>A small fee, and a share only of what comes back.</h3>
+        <p class="px-deep-lead">Every finding, AI-drafted requests, approvals and follow-up reminders. The success fee is proposed and automated billing is disabled.</p>
+        <div class="px-deep-cols">
+          <div><b>Why it costs this</b><p>The $15 covers running every check and every case. The examples illustrate the proposed fee.</p></div>
+          <div><b>Who it’s for</b><p>Businesses that recover money now and then, and would rather pay when it works than commit to a higher monthly price.</p></div>
         </div>
       </div>
-    </section>
+      <div class="px-deep-visual"><div class="px-receipt"><div class="px-rc-head"><span class="type-mono">Example month</span><span class="type-mono">Growth</span></div><div class="px-rc-row"><span>Money that came back</span><b>$1,200</b></div><div class="px-rc-row"><span>Monthly fee</span><b>$15</b></div><div class="px-rc-row"><span>Proposed 10% fee</span><b>$120</b></div><div class="px-rc-row is-sub"><span>Your cost</span><b>$135</b></div><div class="px-rc-total"><span>You keep</span><b>$1,065</b></div><div class="px-rc-note">If nothing comes back in a month, you pay $15.</div></div></div>
+    </article>
 
-    <!-- FAQ -->
-    <section class="rounded-section hide-nav" id="faq" theme="white">
-      <div class="bg bg-top" theme="white"></div>
-      <div class="bg bg-bottom" theme="white"></div>
-      <div class="nav-slot" data-theme="white"></div>
-      <div class="rs-scale" theme="white">
-        <div class="article-section">
-          <div class="full desktop-only divider-block"><div class="the-container"><div class="the-grid"><div class="divider-v"></div></div></div></div>
-          <div class="content">
-            <div class="article-module article-head">
-              <div class="the-grid">
-                <div class="the-col"><div class="generic"></div></div>
-                <h2 class="type-h2 heading" data-split="h2">FAQ</h2>
-              </div>
-            </div>
-            <div class="article-module article-accordion">
-              <div class="the-grid">
-                <div class="the-col">
-                  <ul class="items">
-                    <li><details><summary class="type-body-medium">How much does Reclaim cost?</summary><p class="desc type-body-small">Free costs nothing and shows the three smallest findings in each upload. Growth is $15 a month plus 10% of money that actually comes back. Flat is $50 a month with no success fee. Paid plans open with our supervised pilots; <a href="#contact" data-modal="talk">talk to us</a> to join one. Refunds and credits always go directly to you.</p></details></li>
-                    <li><details><summary class="type-body-medium">What does the free audit include?</summary><p class="desc type-body-small">Upload an export and Reclaim runs every check on it at no cost. On the free plan, three of the findings are shown in full, with the records behind them. The full list comes with a paid plan.</p></details></li>
-                    <li><details><summary class="type-body-medium">What counts as recovered?</summary><p class="desc type-body-small">Cash that settled, or a credit that actually offset a real bill. A vendor agreeing that they owe you is not recovered. A credit note sitting unapplied is not recovered either: it is tracked as confirmed but unapplied until it is used.</p></details></li>
-                    <li><details><summary class="type-body-medium">Which part of the price depends on what's recovered?</summary><p class="desc type-body-small">Growth proposes a 10% success fee. Automated success-fee billing is disabled while attribution, independent matching, reversals, customer approval and invoiceable events are defined. A check, promise, unused credit, or customer-entered return does not by itself create a fee.</p></details></li>
-                    <li><details><summary class="type-body-medium">What about a credit we already had?</summary><p class="desc type-body-small">An unused vendor credit is money you already own, so recovering it may need no outreach at all. Reclaim shows you the credit and recommends whether to apply it to an upcoming bill or ask for a cash refund. It counts once the credit is actually used or the refund arrives.</p></details></li>
-                    <li><details><summary class="type-body-medium">Can Reclaim move money or change our books?</summary><p class="desc type-body-small">Reclaim cannot move money. CSV upload is the demonstrated input. QuickBooks connection code uses an Intuit accounting OAuth scope that permits writes, though the current import adapter uses read requests; production access is not verified here. Supplier email requires your confirmation and a separate Gmail sending connection.</p></details></li>
-                    <li><details><summary class="type-body-medium">Will you contact our vendors without asking?</summary><p class="desc type-body-small">No. The first outreach on any case needs your approval, and you can mark any vendor Do Not Contact: detection keeps running, outreach stops. Later, we plan to let you choose rules under which approved playbooks start on their own, such as exact duplicates under an amount you set. That mode, Recovery Autopilot, is software you configure, not a person working your cases, and it isn't available yet.</p></details></li>
-                    <li><details><summary class="type-body-medium">What happens to a disputed case?</summary><p class="desc type-body-small">Automation stops and the case comes back to you. Anything subjective, contested, or legal is a decision for your team, not a step a playbook takes on its own.</p></details></li>
-                    <li><details><summary class="type-body-medium">How do we get started?</summary><p class="desc type-body-small">Onboarding is self-service: upload your exports, choose how far back to look, and the first sweep starts. Billing and cancelling happen in the product too, with no call needed.</p></details></li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
+    <article class="px-deep" id="flat">
+      <div class="px-deep-copy">
+        <div class="px-deep-n"><span class="type-mono">03</span><span class="px-deep-name">Flat</span></div>
+        <h3>One fixed price. Every dollar stays with you.</h3>
+        <p class="px-deep-lead">Everything in Growth with no share of what comes back, at all. The more you recover, the better it looks.</p>
+        <div class="px-deep-cols">
+          <div><b>Why it costs this</b><p>A fixed price is easy to budget, and it stops growing when your recoveries do. Past $350 a month recovered, Flat costs less than Growth, because 10% of $350 is the $35 between them.</p></div>
+          <div><b>Who it’s for</b><p>Businesses with many vendors and steady recoveries, or a finance team that wants one number in the budget.</p></div>
         </div>
       </div>
-    </section>
+      <div class="px-deep-visual"><div class="px-receipt"><div class="px-rc-head"><span class="type-mono">Example month</span><span class="type-mono">Flat</span></div><div class="px-rc-row"><span>Money that came back</span><b>$1,200</b></div><div class="px-rc-row"><span>Monthly fee</span><b>$50</b></div><div class="px-rc-row"><span>Success fee</span><b>$0</b></div><div class="px-rc-row is-sub"><span>Your cost</span><b>$50</b></div><div class="px-rc-total"><span>You keep</span><b>$1,150</b></div><div class="px-rc-note">Recover $5,000 that month and you still pay $50.</div></div></div>
+    </article>
+  </section>
 
-  </div>
+  <section class="px-matrix-wrap" theme="grey" aria-labelledby="px-matrix-title">
+    <div class="nav-slot" data-theme="grey"></div>
+    <div class="px-section-head">
+      <div class="type-mono px-eyebrow">Side by side</div>
+      <h2 class="type-h2" id="px-matrix-title">Everything, plan by plan.</h2>
+    </div>
+    <div class="px-matrix">
+      <table>
+        <thead><tr><th scope="col"></th><th scope="col">Free</th><th scope="col" class="is-featured">Growth</th><th scope="col">Flat</th></tr></thead>
+        <tbody><tr><th scope="row">Monthly price</th><td>$0</td><td class="is-featured">$15</td><td>$50</td></tr><tr><th scope="row">Success fee</th><td>None</td><td class="is-featured">Proposed 10%. Currently disabled.</td><td>None</td></tr><tr><th scope="row">Ledger uploads</th><td>Unlimited</td><td class="is-featured">Unlimited</td><td>Unlimited</td></tr><tr><th scope="row">All eight checks on every file</th><td><i class="px-yes" aria-label="Included"></i></td><td class="is-featured"><i class="px-yes" aria-label="Included"></i></td><td><i class="px-yes" aria-label="Included"></i></td></tr><tr><th scope="row">Findings opened in full</th><td>3 smallest per upload</td><td class="is-featured">Every finding</td><td>Every finding</td></tr><tr><th scope="row">Recovery letters</th><td>Editable drafts</td><td class="is-featured">AI-drafted from the records</td><td>AI-drafted from the records</td></tr><tr><th scope="row">Send approved requests from your Gmail</th><td><i class="px-yes" aria-label="Included"></i></td><td class="is-featured"><i class="px-yes" aria-label="Included"></i></td><td><i class="px-yes" aria-label="Included"></i></td></tr><tr><th scope="row">Approvals, follow-ups and partial returns</th><td><i class="px-no" aria-label="Not included"></i></td><td class="is-featured"><i class="px-yes" aria-label="Included"></i></td><td><i class="px-yes" aria-label="Included"></i></td></tr><tr><th scope="row">Full case history</th><td><i class="px-no" aria-label="Not included"></i></td><td class="is-featured"><i class="px-yes" aria-label="Included"></i></td><td><i class="px-yes" aria-label="Included"></i></td></tr><tr><th scope="row">Every-vendor reports and accounting closeout</th><td><i class="px-no" aria-label="Not included"></i></td><td class="is-featured"><i class="px-yes" aria-label="Included"></i></td><td><i class="px-yes" aria-label="Included"></i></td></tr><tr><th scope="row">Re-audit the same ledger</th><td><i class="px-no" aria-label="Not included"></i></td><td class="is-featured"><i class="px-yes" aria-label="Included"></i></td><td><i class="px-yes" aria-label="Included"></i></td></tr><tr><th scope="row">Refunds and credits go straight to you</th><td><i class="px-yes" aria-label="Included"></i></td><td class="is-featured"><i class="px-yes" aria-label="Included"></i></td><td><i class="px-yes" aria-label="Included"></i></td></tr></tbody>
+      </table>
+    </div>
+  </section>
 
-  <!-- CLOSING (white): the one stack, put right; one action, the three promises under it -->
+  <section class="px-why" theme="black">
+    <div class="nav-slot" data-theme="black"></div>
+    <div class="px-section-head">
+      <div class="type-mono px-eyebrow">Why Reclaim</div>
+      <h2 class="type-h2" data-split="h2">Not the only way to chase a mistake. The one that keeps you in charge.</h2>
+    </div>
+    <div class="px-why-grid">
+      <div><span class="type-mono">Checking by hand</span><p>A spreadsheet costs nothing, but someone has to compare every payment, and mistakes slip through when they’re busy.</p><p class="px-us">Reclaim checks every payment in your file, every time, and shows only what’s worth a look.</p></div>
+      <div><span class="type-mono">A recovery audit firm</span><p>They often work for a share of what they find, and you hand your records and the vendor conversations to someone else.</p><p class="px-us">With Reclaim you see every finding yourself, and nothing reaches a vendor unless you approve it.</p></div>
+      <div><span class="type-mono">Your payment software</span><p>It’s built to get bills paid, not to go back through what’s already gone out and get money returned.</p><p class="px-us">Reclaim works after the payment, from your exports, and follows each case until the money lands.</p></div>
+    </div>
+  </section>
+
+  <section class="px-ledger" id="lifecycle" theme="white">
+    <div class="nav-slot" data-theme="white"></div>
+    <div class="px-section-head">
+      <div class="type-mono px-eyebrow">The Recovery Ledger</div>
+      <h2 class="type-h2" data-split="h2">Counted when it’s back, not when it’s found.</h2>
+      <p class="type-body-large">Found amounts, supplier promises and recorded returns are tracked separately.</p>
+    </div>
+    <ol class="px-stages"><li><i></i><span class="type-mono">01</span><b>Discover</b><p>Related signals become one case: the same vendor, the same bill.</p></li><li><i></i><span class="type-mono">02</span><b>Verify</b><p>You check the records against your bank until the amount is provable.</p></li><li><i></i><span class="type-mono">03</span><b>Recover</b><p>You approve the request and send it. Replies are tracked on the case.</p></li><li class=is-on><i></i><span class="type-mono">04</span><b>Recovered</b><p>The refund settled, or the credit offset a real bill.</p></li><li><i></i><span class="type-mono">05</span><b>Reconcile</b><p>The accounting steps to close the case in your books.</p></li></ol>
+  </section>
+
+  <section class="px-faq" id="faq" theme="grey">
+    <div class="nav-slot" data-theme="grey"></div>
+    <div class="px-faq-grid">
+      <div><div class="type-mono px-eyebrow">Questions</div><h2 class="type-h2" data-split="h2">The fine print, in plain words.</h2></div>
+      <ul class="px-faq-list">
+      <li><details><summary class="type-body-medium">How much does Reclaim cost?</summary><p class="desc type-body-small">Free costs nothing and shows the three smallest findings in each upload. Growth is $15 a month. The proposed 10% success fee is currently disabled. Flat is $50 a month with no success fee. Paid plans open with our supervised pilots; <a href="#contact" data-modal="talk">talk to us</a> to join one. Refunds and credits always go directly to you.</p></details></li>
+      <li><details><summary class="type-body-medium">What does the free audit include?</summary><p class="desc type-body-small">Upload an export and Reclaim runs every check on it at no cost. On the free plan, three of the findings are shown in full, with the records behind them. The full list comes with a paid plan.</p></details></li>
+      <li><details><summary class="type-body-medium">What counts as recovered?</summary><p class="desc type-body-small">Cash that settled, or a credit that actually offset a real bill. A vendor agreeing that they owe you is not recovered. A credit note sitting unapplied is not recovered either: it is tracked as confirmed but unapplied until it is used.</p></details></li>
+      <li><details><summary class="type-body-medium">Which part of the price depends on what's recovered?</summary><p class="desc type-body-small">Growth proposes a 10% success fee. Automated success-fee billing is currently disabled.</p></details></li>
+      <li><details><summary class="type-body-medium">Can Reclaim move money or change our books?</summary><p class="desc type-body-small">Refunds go directly to your business. The optional QuickBooks import uses read requests under an accounting grant that permits writes. Supplier email requires a separate Gmail connection and your confirmation.</p></details></li>
+      <li><details><summary class="type-body-medium">Will you contact our vendors without asking?</summary><p class="desc type-body-small">No. The first outreach on any case needs your approval, and you can mark any vendor Do Not Contact: detection keeps running, outreach stops. Later, we plan to let you choose rules under which approved playbooks start on their own, such as exact duplicates under an amount you set. That mode, Recovery Autopilot, is software you configure, not a person working your cases, and it isn't available yet.</p></details></li>
+      <li><details><summary class="type-body-medium">What happens to a disputed case?</summary><p class="desc type-body-small">Automation stops and the case comes back to you. Anything subjective, contested, or legal is a decision for your team, not a step a playbook takes on its own.</p></details></li>
+      <li><details><summary class="type-body-medium">How do we get started?</summary><p class="desc type-body-small">Onboarding is self-service: upload your exports, choose how far back to look, and the first sweep starts. Billing and cancelling happen in the product too, with no call needed.</p></details></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- CLOSING (white): the mark, as a stack of records with the green one out (blender/hero_stack.py logo=1: the How It Works logo loop, cropped; the Safari MP4 is baked on this section’s white); one action, the three promises under it -->
   <section class="section closing" theme="white" data-closing>
     <div class="nav-slot" data-theme="white"></div>
     <div class="the-container">
-      <img class="closing-object" src="/media/closing/coins-720.webp" srcset="/media/closing/coins-720.webp 720w, /media/closing/coins-1200.webp 1200w" sizes="(max-width: 1023px) 72vw, 34rem" width="720" height="509" alt="" loading="lazy" decoding="async" data-closing-object>
+      <video class="closing-object" data-reel data-page-baked src="/media/closing/mark.webm" poster="/media/closing/mark-720.webp" width="720" height="401" loop muted playsinline preload="metadata" aria-hidden="true"></video>
       <h2 class="heading type-h2" data-split="h2">Don't just find the money.<br><em>Reclaim it.</em></h2>
       <p class="closing-lede" data-closing-in>Upload an export and see what your own records show.</p>
       <div class="closing-actions" data-closing-in>

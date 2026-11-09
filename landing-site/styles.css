@@ -168,8 +168,8 @@ img, video, canvas, svg { display: block; max-width: 100%; }
 
 /* ---------- logo ---------- */
 .hx-logo { --h: 2.4rem; display: flex; align-items: center; gap: calc(var(--h) * .28); height: var(--h); color: currentColor; }
-.hx-logo .wheel { height: 100%; width: auto; overflow: visible; flex: none; }
-.hx-logo .wheel .fill { fill: var(--cl-reclaim); }
+.hx-logo .wheel { height: 125%; width: auto; overflow: visible; flex: none; }
+.hx-logo .wheel .fill { color: var(--cl-reclaim); }
 .hx-logo .word {
   display: flex;
   overflow: hidden;
@@ -715,7 +715,7 @@ img, video, canvas, svg { display: block; max-width: 100%; }
 /* sidebar */
 .app-side { display: flex; flex: none; flex-direction: column; width: 15rem; padding: 1.4rem 1rem 1.2rem; border-right: 1px solid var(--a-line); background: var(--a-bg); }
 .app-brand { display: flex; align-items: center; gap: .8rem; height: 3.2rem; margin-bottom: 1.1rem; padding: 0 .7rem; }
-.app-brand svg { width: 1.8rem; height: 1.8rem; }
+.app-brand svg { width: 2.1rem; height: 2.1rem; }
 .app-brand b { font-size: 1.55rem; font-weight: 650; letter-spacing: -.045em; }
 .app-find { display: flex; align-items: center; gap: .8rem; height: 3rem; margin-bottom: 1.4rem; padding: 0 .8rem; border: 1px solid var(--a-line); border-radius: .7rem; background: var(--a-card); color: var(--a-muted); font-size: 1.1rem; }
 .app-find svg { width: 1.3rem; height: 1.3rem; }
@@ -930,7 +930,8 @@ img, video, canvas, svg { display: block; max-width: 100%; }
 
 /* ---------- closing: the one stack put right, one action, the three promises under it ---------- */
 .closing { padding-block: 12rem 20rem; text-align: center; }
-.closing-object { display: block; width: 34rem; height: auto; margin: 0 auto 1.2rem; }
+.closing-object { display: block; width: 40rem; height: auto; margin: 0 auto 1.2rem; }
+video.closing-object { aspect-ratio: 1116 / 622; object-fit: contain; }
 .closing .heading, .closing .heading .line-wrap { margin-inline: auto; }
 .closing-lede { max-width: 62rem; margin: 2.8rem auto 0; color: var(--cl-grey-500); font-size: 2.2rem; font-weight: 500; letter-spacing: -.02em; line-height: 1.35; }
 .closing-actions { display: flex; align-items: center; justify-content: center; gap: 2.8rem; margin-top: 4rem; }

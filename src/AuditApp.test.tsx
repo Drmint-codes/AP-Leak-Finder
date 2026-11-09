@@ -234,12 +234,25 @@ describe('AuditApp', () => {
     window.history.pushState({}, '', '/audit')
   })
 
-  it('a bare /audit with no ledger shows the Launch screen, not a workspace', () => {
+  it('a bare /audit with no ledger shows the workspace with an empty Overview', () => {
     setLocation('/audit')
     render(<AuditApp />)
 
+    expect(workspace()).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Overview')
     expect(screen.getByRole('button', { name: /run the sample/i })).toBeInTheDocument()
-    expect(workspace()).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /upload a ledger/i })).toBeInTheDocument()
+  })
+
+  it('Settings works before the first audit, without the parts that need one', () => {
+    setLocation('/audit?mode=settings')
+    render(<AuditApp />)
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Settings')
+    expect(screen.getByRole('heading', { name: 'Legal' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /run the sample/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /delete this audit/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /take the tour again/i })).not.toBeInTheDocument()
   })
 
   it('?entry=sample builds the ledger on its CTA and lands on the Dashboard with the engine’s real totals', async () => {
@@ -247,7 +260,7 @@ describe('AuditApp', () => {
     render(<AuditApp />)
 
     // The entry route is a threshold, not a redirect: nothing runs until asked.
-    expect(workspace()).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Up next' })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /run the sample/i }))
     await waitFor(DASHBOARD_READY)

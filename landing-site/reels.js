@@ -16,7 +16,8 @@
     const webm = /\.webm$/.test(v.getAttribute('src') || '');   // (the hero is MP4 already, from <source>s)
     if (safari && webm) {
       v.src = v.getAttribute('src').replace(/\.webm$/, '.mp4');
-      v.dataset.baked = 'dark';   // the twins are baked over black; styles.css blends that away
+      // the twins are baked over black, which styles.css blends away; data-page-baked ones are baked on the page's colour
+      if (!v.hasAttribute('data-page-baked')) v.dataset.baked = 'dark';
     }
     v.muted = true;
     v.playsInline = true;

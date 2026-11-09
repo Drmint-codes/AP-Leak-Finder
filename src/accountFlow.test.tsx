@@ -38,8 +38,8 @@ function Gate() {
   )
 }
 
-function mountWorkspace() {
-  window.history.pushState({}, '', '/audit')
+function mountWorkspace(path = '/audit') {
+  window.history.pushState({}, '', path)
   return render(
     <AuthProvider>
       <Gate />
@@ -246,80 +246,64 @@ describe('session bootstrap', () => {
 describe('onboarding and plans', () => {
   const carol = { ...alice, firstName: 'Carol', lastName: 'Diaz', email: 'carol@example.com', keepTour: true }
 
-  it('a new account goes through onboarding once; its answers are saved on the account and it hands over to the ledger choice', async () => {
+  it('a new account goes through onboarding once; its answers are saved and it hands over to the upload', async () => {
     await registerViaApi(carol)
     mountWorkspace()
     await screen.findByText('ready:nobody')
     await logIn(carol)
     const flow = await screen.findByTestId('onboarding')
-    expect(flow).toHaveTextContent('Step 1 of 8')
-    expect(flow).toHaveTextContent('Welcome, Carol')
-    fireEvent.click(within(flow).getByRole('button', { name: /let’s go/i }))
-
-    // goals: nothing picked yet means the button offers to skip; picking changes it
-    expect(flow).toHaveTextContent('Step 2 of 8')
-    expect(within(flow).getByRole('button', { name: /skip this/i })).toBeInTheDocument()
-    fireEvent.click(within(flow).getByRole('checkbox', { name: /duplicate payments/i }))
-    fireEvent.click(within(flow).getByRole('checkbox', { name: /unpaid invoices/i }))
-    expect(flow).toHaveTextContent(/today’s checks read the payments you’ve made/i)
-    // "not sure yet" stands alone
-    fireEvent.click(within(flow).getByRole('checkbox', { name: /not sure yet/i }))
-    expect(within(flow).getByRole('checkbox', { name: /duplicate payments/i })).toHaveAttribute('aria-checked', 'false')
-    fireEvent.click(within(flow).getByRole('checkbox', { name: /unpaid invoices/i }))
-    fireEvent.click(within(flow).getByRole('checkbox', { name: /duplicate payments/i }))
-    expect(within(flow).getByRole('checkbox', { name: /not sure yet/i })).toHaveAttribute('aria-checked', 'false')
-    fireEvent.click(within(flow).getByRole('button', { name: /^continue/i }))
+    expect(flow).toHaveTextContent('Step 1 of 4')
 
     // business: the company from sign-up is already filled in
     expect(within(flow).getByLabelText('Business name')).toHaveValue(carol.company)
+    fireEvent.change(within(flow).getByLabelText('Business name'), { target: { value: 'Diaz Paper' } })
     fireEvent.change(within(flow).getByLabelText(/what kind of work/i), { target: { value: 'Paper distribution' } })
     fireEvent.click(within(flow).getByRole('radio', { name: 'I run finance' }))
     fireEvent.click(within(flow).getByRole('button', { name: /^continue/i }))
 
-    // tools: only CSV works today, and the screen says so
-    expect(within(flow).getByRole('checkbox', { name: /quickbooks online/i })).toHaveTextContent(/coming later/i)
-    expect(within(flow).getByRole('checkbox', { name: /spreadsheets or csv/i })).toHaveTextContent(/works today/i)
-    fireEvent.click(within(flow).getByRole('checkbox', { name: /quickbooks online/i }))
+    // payments: a system with a guide links to it
+    expect(flow).toHaveTextContent('Step 2 of 4')
+    fireEvent.click(within(flow).getByRole('radio', { name: 'Xero' }))
+    expect(within(flow).getByRole('link', { name: /xero guide/i })).toHaveAttribute('href', '/guides/xero/')
     fireEvent.click(within(flow).getByRole('button', { name: /^continue/i }))
 
-    // how it works, then autonomy: the automatic option is marked as not built yet
-    expect(flow).toHaveTextContent('Step 5 of 8')
-    fireEvent.click(within(flow).getByRole('button', { name: /^continue/i }))
-    fireEvent.click(within(flow).getByRole('radio', { name: /follow up on what i approve/i }))
-    expect(flow).toHaveTextContent(/needs your email connected/i)
+    // autonomy
+    expect(flow).toHaveTextContent('Step 3 of 4')
     fireEvent.click(within(flow).getByRole('radio', { name: /draft it for me/i }))
     fireEvent.click(within(flow).getByRole('button', { name: /^continue/i }))
 
-    // data: an account's audits are saved to the account; AI only when asked
-    expect(flow).toHaveTextContent('With your Reclaim account')
-    expect(flow).toHaveTextContent(/only if you ask/i)
-    fireEvent.click(within(flow).getByRole('button', { name: /^continue/i }))
-
-    // purpose is optional; a suggestion fills it in
-    fireEvent.click(within(flow).getByRole('button', { name: 'More breathing room' }))
-    expect(within(flow).getByLabelText(/this money would mean/i)).toHaveValue('More breathing room.')
-    fireEvent.click(within(flow).getByRole('button', { name: /continue to ledger setup/i }))
+    // first audit
+    expect(flow).toHaveTextContent('Step 4 of 4')
+    expect(flow).toHaveTextContent('A CSV export from Xero')
+    fireEvent.click(within(flow).getByRole('button', { name: /upload a ledger/i }))
 
     await waitFor(() => expect(screen.queryByTestId('onboarding')).not.toBeInTheDocument())
-    await screen.findByRole('button', { name: /upload a ledger/i })
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
     const me = (await live.api('/api/auth/me')).body.user
     expect(me.onboardingSeenAt).toBeTypeOf('number')
-    expect(me.onboardingProfile).toMatchObject({
-      goals: ['unpaid', 'duplicates'],
-      businessName: carol.company,
-      work: 'Paper distribution',
-      role: 'finance',
-      tools: ['quickbooks'],
-      autonomy: 'draft',
-      purpose: 'More breathing room.',
-    })
+    expect(me.onboardingProfile).toMatchObject({ businessName: 'Diaz Paper', work: 'Paper distribution', role: 'finance', tools: ['xero'], autonomy: 'draft' })
 
-    // next session: straight to the ledger choice
+    // next session: straight to the empty Overview
     cleanup()
     mountWorkspace()
     await screen.findByText(`ready:${carol.email}`)
     await screen.findByRole('button', { name: /upload a ledger/i })
     expect(screen.queryByTestId('onboarding')).not.toBeInTheDocument()
+  })
+
+  it('someone who arrives for the sample sees its results first; onboarding waits for their next visit', async () => {
+    const finn = { ...carol, firstName: 'Finn', email: 'finn@example.com' }
+    await registerViaApi(finn)
+    mountWorkspace('/audit?entry=sample')
+    await screen.findByText('ready:nobody')
+    await logIn(finn)
+    fireEvent.click(await screen.findByRole('button', { name: /run the sample/i }))
+    await screen.findByRole('heading', { name: 'Up next' })
+    expect(screen.queryByTestId('onboarding')).not.toBeInTheDocument()
+
+    cleanup()
+    mountWorkspace()
+    await screen.findByTestId('onboarding')
   })
 
   it('skipping onboarding is remembered too, with whatever was answered', async () => {
@@ -329,14 +313,25 @@ describe('onboarding and plans', () => {
     await screen.findByText('ready:nobody')
     await logIn(dana)
     const flow = await screen.findByTestId('onboarding')
-    fireEvent.click(within(flow).getByRole('button', { name: /let’s go/i }))
-    fireEvent.click(within(flow).getByRole('checkbox', { name: /credits or refunds/i }))
+    fireEvent.click(within(flow).getByRole('radio', { name: 'I own it' }))
     fireEvent.click(within(flow).getByRole('button', { name: 'Skip setup' }))
     await waitFor(() => expect(screen.queryByTestId('onboarding')).not.toBeInTheDocument())
     await screen.findByRole('button', { name: /upload a ledger/i })
     const me = (await live.api('/api/auth/me')).body.user
     expect(me.onboardingSeenAt).toBeTypeOf('number')
-    expect(me.onboardingProfile.goals).toEqual(['credits'])
+    expect(me.onboardingProfile.role).toBe('owner')
+  })
+
+  it('the sample can be started from the last step of onboarding', async () => {
+    const erin = { ...carol, firstName: 'Erin', email: 'erin@example.com' }
+    await registerViaApi(erin)
+    mountWorkspace()
+    await screen.findByText('ready:nobody')
+    await logIn(erin)
+    const flow = await screen.findByTestId('onboarding')
+    for (let step = 0; step < 3; step++) fireEvent.click(within(flow).getByRole('button', { name: /^continue/i }))
+    fireEvent.click(within(flow).getByRole('button', { name: /run the sample/i }))
+    await screen.findByRole('heading', { name: 'Up next' })
   })
 
   it('a Free account sees the three lowest-value findings in full and the rest locked; Pro sees everything', async () => {

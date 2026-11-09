@@ -35,10 +35,10 @@ const MIME: Record<string, string> = {
 // Kept explicit (rather than "serve anything that exists under landing-site/") so
 // this can never shadow something unexpected — landing-site/README.md, notes/,
 // blender/ and src/ stay unreachable, matching landing-site/serve.cjs's own intent.
-const EXACT_ROUTES = new Set(['/', '/about', '/pricing', '/research', '/security', '/guides', '/how-it-works', '/what-it-checks'])
-const PREFIX_ROUTES = ['/research/', '/guides/']
+const EXACT_ROUTES = new Set(['/', '/about', '/pricing', '/research', '/security', '/guides', '/how-it-works', '/what-it-checks', '/film', '/launch', '/together'])
+const PREFIX_ROUTES = ['/research/', '/guides/', '/film/', '/launch/', '/together/']
 const ASSET_PREFIXES = ['/assets/', '/media/']
-const ASSET_FILES = new Set(['/styles.css', '/pages.css', '/customize.css', '/main.js', '/reels.js', '/customize.js', '/walkthrough.js', '/finds.js'])
+const ASSET_FILES = new Set(['/styles.css', '/pages.css', '/customize.css', '/main.js', '/reels.js', '/customize.js', '/hero-paper.js', '/walkthrough.js', '/finds.js'])
 
 function isLandingSiteRoute(pathname: string): boolean {
   const trimmed = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname

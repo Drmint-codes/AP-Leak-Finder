@@ -4,101 +4,60 @@ description: How to export the bills, payments, vendors and credits Reclaim read
 folder: guides
 template: guides
 ---
-  <!-- HUB HERO: white strip for the nav, then the black panel -->
-  <section class="guides-hero">
+  <!-- The hub: one card per system guide. The guides themselves are the pages in this folder. -->
+  <section class="gd-hero" theme="grey">
+    <div class="nav-slot" data-theme="grey"></div>
+    <div class="gd-hero-copy">
+      <div class="eyebrow type-mono">Guides</div>
+      <h1 class="type-h1" data-split="h1">Export your payments from the system you already use.</h1>
+      <p class="type-body-large">Each guide walks through the exact reports to run and the files to upload, step by step. Nothing to install, and nothing connects to your books. Direct connections are in development.</p>
+    </div>
+  </section>
+
+  <section class="gd-list" theme="grey">
+    <div class="nav-slot" data-theme="grey"></div>
+    <ol class="gd-grid">
+      <li><a class="gd-card" href="/guides/quickbooks-online">
+        <span class="type-mono">01</span>
+        <b>QuickBooks Online</b>
+        <p>Four reports, each exported to Excel or CSV.</p>
+        <span class="gd-go">Read the guide<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a class="gd-card" href="/guides/xero">
+        <span class="type-mono">02</span>
+        <b>Xero</b>
+        <p>The reports and exports to run, in order.</p>
+        <span class="gd-go">Read the guide<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a class="gd-card" href="/guides/netsuite">
+        <span class="type-mono">03</span>
+        <b>NetSuite</b>
+        <p>Saved searches and the exports Reclaim reads.</p>
+        <span class="gd-go">Read the guide<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a class="gd-card" href="/guides/bill">
+        <span class="type-mono">04</span>
+        <b>BILL</b>
+        <p>The exports to pull and how to check them.</p>
+        <span class="gd-go">Read the guide<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+      <li><a class="gd-card is-other" href="#contact" data-modal="talk">
+        <span class="type-mono">Another system</span>
+        <b>Can’t find yours?</b>
+        <p>Tell us what you use. Most systems export the same files under different names, and we’ll point you to the right ones.</p>
+        <span class="gd-go">Talk to us<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </a></li>
+    </ol>
+  </section>
+
+  <section class="gd-next" theme="white">
     <div class="nav-slot" data-theme="white"></div>
-    <div class="panel">
-      <div class="the-container">
-        <div class="the-grid">
-          <p class="kicker guides-kicker">Reclaim guides</p>
-          <h1 class="title">What do you need to export?</h1>
-          <p class="desc">Find the right records in your accounting system and export them.</p>
-          <form class="search" role="search" onsubmit="return false">
-            <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
-            <input type="search" placeholder="Search the guides…" aria-label="Search the guides">
-            <button type="submit" class="go">Search</button>
-          </form>
-        </div>
-      </div>
-    </div>
+    <div class="section-head"><div class="eyebrow type-mono">After the export</div><h2 class="type-h2" data-split="h2">What happens once the file is in.</h2></div>
+    <ul class="gd-next-grid">
+      <li><a href="/how-it-works"><span class="type-mono">01</span><b>How it works</b><p>Upload, check, confirm, recover: the whole process in six steps.</p></a></li>
+      <li><a href="/what-it-checks"><span class="type-mono">02</span><b>What it checks</b><p>The eight checks Reclaim runs, with an example of each from the sample ledger.</p></a></li>
+      <li><a href="/security"><span class="type-mono">03</span><b>Security</b><p>What Reclaim reads, what it never gets, and what it can never do with your records.</p></a></li>
+    </ul>
   </section>
 
-  <!-- START HERE: pick your accounting system -->
-  <section class="guides-start">
-    <div class="the-container">
-      <div class="the-grid">
-        <div class="card">
-          <div class="copy">
-            <p class="kicker guides-kicker"><span class="mark" aria-hidden="true"></span>Start here</p>
-            <h2 class="title">Exporting your records</h2>
-            <p class="desc">Reclaim reads four exports: bills, payments, vendors and credits. Direct connections are in development. Pick your system for the steps.</p>
-            <ul class="systems">
-              <li class="guides-system"><a class="inner" href="/guides/quickbooks-online">
-                <span class="name-badge">QuickBooks</span>
-                <span class="badge"><span class="dot" aria-hidden="true"></span>Guide ready</span>
-                <span class="go">View guide <span aria-hidden="true">&rarr;</span></span>
-              </a></li>
-              <li class="guides-system"><a class="inner" href="/guides/xero">
-                <span class="name-badge">Xero</span>
-                <span class="badge"><span class="dot" aria-hidden="true"></span>Guide ready</span>
-                <span class="go">View guide <span aria-hidden="true">&rarr;</span></span>
-              </a></li>
-              <li class="guides-system"><a class="inner" href="/guides/netsuite">
-                <span class="name-badge">NetSuite</span>
-                <span class="badge"><span class="dot" aria-hidden="true"></span>Guide ready</span>
-                <span class="go">View guide <span aria-hidden="true">&rarr;</span></span>
-              </a></li>
-              <li class="guides-system"><a class="inner" href="/guides/bill">
-                <span class="name-badge">Bill</span>
-                <span class="badge"><span class="dot" aria-hidden="true"></span>Guide ready</span>
-                <span class="go">View guide <span aria-hidden="true">&rarr;</span></span>
-              </a></li>
-            </ul>
-            <p class="guides-empty kicker--foot" hidden>No guide matches that yet. Tell us what you use.</p>
-          </div>
-          <div class="mark-art" aria-hidden="true"><svg viewBox="0 0 26 23" fill="currentColor"><use href="#hx-wheel"/></svg></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- THREE CARDS -->
-  <section class="guides-cards">
-    <div class="the-container">
-      <div class="the-grid">
-        <ul class="grid">
-          <li class="card"><a class="inner" href="#contact" data-modal="talk">
-            <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>
-            <h3 class="title">Contact us</h3>
-            <p class="desc">Not sure which export you need? Tell us what system you use.</p>
-          </a></li>
-          <li class="card"><a class="inner" href="/security">
-            <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>
-            <h3 class="title">Security</h3>
-            <p class="desc">What Reclaim reads, connected or uploaded, and what it can never do with it.</p>
-          </a></li>
-          <li class="card"><a class="inner" href="/what-it-checks#duplicate-payments">
-            <svg class="icon" aria-hidden="true"><use href="#i-mark-eye"/></svg>
-            <h3 class="title">What it finds</h3>
-            <p class="desc">The five things Reclaim looks for, with examples and the records behind each one.</p>
-          </a></li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- CLOSING BAND -->
-  <section class="guides-band">
-    <div class="the-container">
-      <div class="the-grid">
-        <div class="copy">
-          <p class="kicker guides-kicker"><span class="mark" aria-hidden="true"></span>Another system</p>
-          <h2 class="title">Can't find yours?</h2>
-          <p class="desc">If your system isn't listed, tell us what you use. Most of them export the same four files under different names.</p>
-        </div>
-        <div class="action">
-          <a href="#contact" class="cta cta-button has-arrow" size="large" theme="white" data-modal="talk"><span class="hover-loop right"><span class="inner">Talk to us<svg class="icon"><use href="#i-arrow"/></svg></span></span></a>
-        </div>
-      </div>
-    </div>
-  </section>
+<!-- @include closing -->

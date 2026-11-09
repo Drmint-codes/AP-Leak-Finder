@@ -224,9 +224,34 @@ def cutter(o, at, groove=GROOVE):
     o.data.materials.append(groove)                       # the faces it cuts take this (a shade under the stone)
 
 
-tl = .2 * D
-title, _ = K.prism('title', rrect(.16, tl, .025, 6), .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)
-cutter(title, (-W / 2 + .2 * W, -D / 2 + .17 * D + tl / 2, hl / 2), POCKET)
+if A.get('logo') == '1':
+    # the Reclaim mark's version of this stack: its R (scripts/reclaim-mark.py, stroked on a 100 unit face) where
+    # the title goes. The face's x runs along the rows (+y), its y down the page (+x)
+    size = float(A.get('rsize', .38)) * W
+    half = 8.5 / 100 * size
+    arc = [(51 + 15.5 * math.sin(math.radians(a)), 37.5 - 15.5 * math.cos(math.radians(a))) for a in range(15, 181, 15)]
+    for p, path in enumerate(([(29, 80), (29, 22), (51, 22)] + arc + [(29, 53)], [(49, 53), (71, 80)])):
+        pts = [Vector(((v - 51) / 100 * size, (u - 50) / 100 * size)) for u, v in path]
+        for q, (a, c) in enumerate(zip(pts, pts[1:])):
+            d = c - a
+            ext = d.length / 2 + half * .12
+            o, _ = K.prism(f'r{p}_{q}', [Vector((-ext, -half)), Vector((ext, -half)), Vector((ext, half)), Vector((-ext, half))], .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)
+            o.rotation_euler = (0, 0, math.atan2(d.y, d.x))
+            cutter(o, (-W / 2 + .215 * W + (a.x + c.x) / 2, -D / 2 + .3 * D + (a.y + c.y) / 2, hl / 2))
+elif A.get('mark'):
+    # a report's small sign where the title goes (the Research pages): each rectangle is (x, y, length, width)
+    marks = {'bars': [(.1, -.21, .14, .09), (.04, -.07, .26, .09), (-.02, .07, .38, .09), (-.08, .21, .5, .09)],
+             'folder': [(0, 0, .46, .56), (-.27, -.15, .12, .24)],
+             'check': [(-.13, 0, .1, .62), (.05, 0, .1, .62), (.2, .18, .08, .26)],
+             'columns': [(-.21, 0, .08, .62), (0, -.21, .3, .09), (0, -.07, .3, .09), (0, .07, .3, .09), (0, .21, .3, .09), (.2, 0, .08, .66)]}[A['mark']]
+    cx, cy = -W / 2 + .2 * W, -D / 2 + .3 * D
+    for k, (mx, my, ml, mw) in enumerate(marks):
+        o, _ = K.prism(f'mark{k}', rrect(ml, mw, min(ml, mw) * .25, 4), .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)
+        cutter(o, (cx + mx, cy + my, hl / 2), GROOVE)
+else:
+    tl = .2 * D
+    title, _ = K.prism('title', rrect(.16, tl, .025, 6), .028, {'m': mat('stone')}, 'm', bevel=0, coll=cuts)
+    cutter(title, (-W / 2 + .2 * W, -D / 2 + .17 * D + tl / 2, hl / 2), POCKET)
 y0, rr = -D / 2 + .18 * D, float(A.get('line', .016))
 for k in range(6):
     L = (.68 if k < 5 else .19) * D
@@ -353,7 +378,8 @@ def film():
         return tuple(round(v, 5) for tt in (t - half, t, t + half) for v in gaps(tt) + slid(tt))
 
     last, last_path, made, copied = None, None, 0, 0
-    for f in range(1, n + 1):
+    first, end = (int(x) for x in A.get('span', f'1-{n}').split('-'))   # span=163-328: only part of the loop
+    for f in range(first, end + 1):
         path = os.path.join(OUT, f'f_{f:04d}.png')
         s = sig(f)
         if os.path.exists(path) and A.get('overwrite') != '1':
