@@ -3,9 +3,19 @@ import type { Finding } from '../types.ts'
 export type EvidenceState = 'insufficient' | 'records_supported' | 'contradicted' | 'suppressed' | 'customer_confirmed' | 'eligible'
 export interface EvidenceReference { reference: string; confirmedBy: string; confirmedAt: number }
 export interface EvidenceConfirmation extends EvidenceReference { confirmed: boolean }
+export interface PriorReturn extends EvidenceReference {
+  method: 'refund' | 'credit'
+  amountMinor: number
+  appliedToBill?: string
+}
+export interface SupplierContact {
+  email: string
+  source: 'supplier_record' | 'document'
+  reference: string
+}
 export const EVIDENCE_CHECKS = [
-  ['duplicateImport', 'Duplicate import ruled out'], ['refund', 'Refund search: no resolving refund'],
-  ['credit', 'Credit search: no resolving credit'], ['void', 'Void search: neither payment voided'],
+  ['duplicateImport', 'Duplicate import ruled out'], ['refund', 'Refund search complete'],
+  ['credit', 'Credit search complete'], ['void', 'Void search: neither payment voided'],
   ['reversal', 'Reversal search: neither payment reversed'],
   ['installment', 'Not installments, splits or retainage'], ['recurring', 'Not separate recurring obligations'],
   ['customerConfirmation', 'Customer confirms the duplicate payment'],
@@ -16,10 +26,12 @@ export interface EvidenceAutofill { source: 'quickbooks'; pulledAt: number; txnI
 export interface RecoveryEvidence {
   /** Reviewed company and stable supplier identities; CSV names alone do not establish either. */
   entity?: EvidenceReference & { entityId: string }
-  supplier?: EvidenceReference & { supplierId: string }
+  supplier?: EvidenceReference & { supplierId: string; contact?: SupplierContact }
   payments: Array<EvidenceReference & { recordId: string; paymentId: string; amountMinor: number; currency: string; settled: boolean; obligationId: string }>
   obligation: EvidenceReference & { obligationId: string; amountMinor: number; currency: string }
   checks: Partial<Record<EvidenceCheck, EvidenceConfirmation>>
+  /** Returns confirmed against source records before the request was opened. */
+  priorReturns?: PriorReturn[]
   contradictions: string[]
   notes: string
   /** Keyed by field (see autofillKey in quickbooksEvidence.ts). Absent for evidence a person typed. */
@@ -65,6 +77,23 @@ export function evaluateEligibility(finding: Finding, evidence: RecoveryEvidence
   if (!Number.isSafeInteger(total)) missingEvidence.push('Payment total exceeds supported exact arithmetic.')
   const amount = total - (obligation?.amountMinor ?? 0)
   if (!minor(amount)) missingEvidence.push('The settled payments must exceed the supported obligation by a positive amount.')
+  let refundedMinor = 0
+  let appliedCreditMinor = 0
+  const returnReferences = new Set<string>()
+  for (const entry of evidence?.priorReturns ?? []) {
+    const ref = entry.reference?.trim().toLowerCase()
+    if (!attested(entry) || !minor(entry.amountMinor) || !ref || returnReferences.has(ref) ||
+      (entry.method !== 'refund' && (entry.method !== 'credit' || !entry.appliedToBill?.trim()))) {
+      missingEvidence.push('Each prior return needs a unique confirmation reference, a positive amount, and the bill where any credit was applied.')
+      continue
+    }
+    returnReferences.add(ref)
+    if (entry.method === 'refund') refundedMinor += entry.amountMinor
+    else appliedCreditMinor += entry.amountMinor
+  }
+  if (!Number.isSafeInteger(refundedMinor + appliedCreditMinor) || refundedMinor + appliedCreditMinor > amount && returnReferences.size > 0) {
+    contradictoryEvidence.push('Confirmed prior returns exceed the original overpayment.')
+  }
   const deduplicationGroup = obligation ? `${evidence?.entity?.entityId.trim().toLowerCase() ?? ''}|${evidence?.supplier?.supplierId.trim().toLowerCase() ?? ''}|${currency}|${obligation.obligationId.trim().toLowerCase()}` : finding.deduplicationGroup ?? finding.id
   const baseEligible = missingEvidence.length === 0 && contradictoryEvidence.length === 0
   if (baseEligible) {
@@ -80,7 +109,13 @@ export function evaluateEligibility(finding: Finding, evidence: RecoveryEvidence
   }
   const eligible = baseEligible && contradictoryEvidence.length === 0
   const evidenceState: EvidenceState = eligible ? 'eligible' : finding.suppressionReason ? 'suppressed' : contradictoryEvidence.length ? 'contradicted' : records.length ? 'records_supported' : 'insufficient'
-  return { eligible, potentialAmountMinor: eligible ? amount : null, currency: currency && supportedCurrency(currency) ? currency : null, evidenceState, missingEvidence, contradictoryEvidence, deduplicationGroup }
+  const netEvidenceMinor = amount - refundedMinor - appliedCreditMinor
+  // The detector can already net imported returns or allocate an invoice-level
+  // budget across duplicate groups. Evidence review must not raise that ceiling.
+  const flaggedMinor = Math.round(finding.dollarImpact * 100)
+  const ledgerAdjustmentMinor = minor(flaggedMinor) ? Math.max(0, netEvidenceMinor - flaggedMinor) : 0
+  const amountBreakdown = { overpaymentMinor: amount, refundedMinor, appliedCreditMinor, ledgerAdjustmentMinor }
+  return { eligible, potentialAmountMinor: eligible ? netEvidenceMinor - ledgerAdjustmentMinor : null, amountBreakdown, currency: currency && supportedCurrency(currency) ? currency : null, evidenceState, missingEvidence, contradictoryEvidence, deduplicationGroup }
 }
 
 export function assertRecoveryEligible(finding: Finding, others: Finding[] = [], requestedAmount?: number) {

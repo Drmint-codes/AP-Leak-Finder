@@ -45,6 +45,7 @@ export function RecoveryProgressPanel({ finding, state, onVendorUpdate, onFollow
   const [tab, setTab] = useState<Tab>(returned > 0 || (position && VENDOR_STATUS[position.status].pending) ? 'money' : 'reply')
 
   const [status, setStatus] = useState<VendorUpdateStatus>('acknowledged')
+  const [promisedMethod, setPromisedMethod] = useState<RecoveryMethod>(state.requestedResolution === 'refund' ? 'refund' : 'credit')
   const [responseNote, setResponseNote] = useState('')
   const [responseAmount, setResponseAmount] = useState('')
   const [expectedDate, setExpectedDate] = useState('')
@@ -76,7 +77,7 @@ export function RecoveryProgressPanel({ finding, state, onVendorUpdate, onFollow
     }
     setVendorError('')
     try {
-      onVendorUpdate(finding.id, { status, note: responseNote.trim(), at: Date.now(), amount: parsedAmount, expectedAt: dateFromInput(expectedDate) ?? undefined })
+      onVendorUpdate(finding.id, { status, note: responseNote.trim(), at: Date.now(), amount: parsedAmount, method: status === 'promised' ? promisedMethod : status === 'credit_issued' ? 'credit' : undefined, expectedAt: dateFromInput(expectedDate) ?? undefined })
     } catch (error) {
       setVendorError(error instanceof Error ? error.message : 'That reply could not be recorded.')
       return
@@ -172,6 +173,12 @@ export function RecoveryProgressPanel({ finding, state, onVendorUpdate, onFollow
                   {VENDOR_STATUS_ORDER.filter((value) => !state.requiresRevalidation || value !== 'followed_up').map((value) => <option key={value} value={value}>{VENDOR_STATUS[value].label}</option>)}
                 </select>
               </div>
+              {status === 'promised' ? <label className="wk-field">Promised resolution
+                <select className="wk-input" value={promisedMethod} onChange={(event) => setPromisedMethod(event.target.value as RecoveryMethod)}>
+                  <option value="refund">Refund</option>
+                  <option value="credit">Credit</option>
+                </select>
+              </label> : null}
               {statusInfo.amount !== 'none' ? (
                 <div className="wk-field">
                   <label htmlFor="vendor-amount">{statusInfo.amount === 'required' ? 'Amount accepted' : 'Amount mentioned (optional)'}</label>

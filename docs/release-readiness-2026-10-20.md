@@ -44,6 +44,41 @@ See `docs/deploy.md` and `.env.example` for the full variable list and host-spec
 
 ## Review demonstration
 
+### Isolated supplier recovery exercise
+
+Use a throwaway local account and a fresh shell with no provider credentials exported. Start the API without loading a credential file, then start Vite in a second terminal. The local development mailbox handles account verification.
+
+```powershell
+# API terminal
+$env:NODE_ENV = 'development'
+$env:PORT = '8790'
+$env:APP_ORIGIN = 'http://localhost:5174'
+$env:DATABASE_PATH = ':memory:'
+node server/index.ts
+
+# Client terminal
+$env:RECLAIM_API_ORIGIN = 'http://127.0.0.1:8790'
+$env:VITE_PORT = '5174'
+npm run dev
+```
+
+1. Log in through `/login?next=%2Faudit%3Fsample%3Drecovery`. Open **Example Supply Co.** The repeated-payment rule flags two payments against bill `SAMPLE-4280`.
+2. Review the fictional bill, payments, and refund references. Select **Save evidence**. Open **Show calculation** to see the original $4,280 duplicate, the $1,000 confirmed refund, and the $3,280 outstanding balance.
+3. Choose **I reviewed this check**, prepare authorization, and save the decision. Select **Refund** and review the suggested `billing@example-supply.test` address from the sample supplier master. Confirm the address and answer the prior-knowledge question. Open **Preview request** and optionally add the editable `payment-evidence.txt` summary.
+4. Approve the exact package and click **Simulate sending request**. The sample records a local activity entry and a follow-up date. There is no external send path for this exercise.
+5. Under **Log a reply**, choose **Promised a refund or credit**, enter $3,280, and add a fictional note. The outstanding amount stays $3,280. Then choose **Record money back**, select **Cash refund** and **Bank transaction**, and enter the fictional reference `SAMPLE-DEPOSIT-3280`. The outstanding amount becomes $0. Reconciliation is available on the closed case.
+
+For repeatable local verification, run `npm test -- src/accountFlow.test.tsx -t "isolated recovery demo"`. The test authenticates against the running local HTTP server and drives the rendered workspace. The exercise is in memory and never syncs to a saved project.
+
+### Sending modes
+
+- **Simulated** uses the local sample action. The Gmail adapter tests separately use a fake Google client to exercise acceptance, rejection, uncertain outcomes, version checks, and concurrent sends.
+- **Manual** uses **Copy draft**, optionally downloads the approved evidence summary, and records **Mark request sent** after the customer sends from their own mailbox. This is a customer record.
+- **Live Gmail** requires the Google OAuth client, `GMAIL_TOKEN_KEY`, and an authorized customer mailbox connected through Settings. See [deployment configuration](deploy.md). Live sending still needs an authorized test mailbox and an approved sandbox recipient before a pilot. Gmail acceptance leaves delivery unconfirmed. Supplier replies are entered manually.
+- A server process interruption during an active Gmail reservation can leave a pending attempt. Reconcile the attempt against the sender's Sent folder before further outreach. Staging verification of interrupted sends is still required.
+
+### Additional historical and cross-device checks
+
 1. Upload a CSV with one repeated invoice payment and inspect both raw rows, import identity and the check's flagged value.
 2. Confirm entity, supplier ID, obligation, currency, settled payment IDs and adjustment checks. Note that these are reviewer assertions; the possible request appears only after the gate passes.
 3. Record a review decision, approve an amount and recipient, then mark a request. Use copy/download for the demonstration; do not send to a supplier.

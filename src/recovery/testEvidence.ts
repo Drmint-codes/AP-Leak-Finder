@@ -4,7 +4,7 @@ import { EVIDENCE_CHECKS, evaluateEligibility } from './eligibility'
 export function attestDuplicate(finding: Finding): Finding {
   const stamp = { reference: 'Synthetic accounting trace', confirmedBy: 'Test customer', confirmedAt: 100 }
   const currency = 'USD'
-  const obligationId = finding.id
+  const obligationId = finding.relatedRecords[0]?.invoiceNumber ?? finding.id
   const company = finding.relatedRecords[0]?.company ?? 'Test company'
   const supplierId = finding.relatedRecords[0]?.quickbooks?.vendorId ?? 'TEST-VENDOR-1'
   const relatedRecords = finding.relatedRecords.map(record => ({ ...record, currency, company: record.company ?? company }))

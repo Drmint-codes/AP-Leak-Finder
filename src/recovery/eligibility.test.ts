@@ -12,6 +12,24 @@ export function completeEvidence(): RecoveryEvidence {
 describe('deterministic recovery eligibility', () => {
  it('keeps CSV-only signals under review', () => expect(evaluateEligibility(supportedFinding()).eligible).toBe(false))
  it('calculates the excess above the supported obligation in minor units', () => expect(evaluateEligibility(supportedFinding(),completeEvidence())).toMatchObject({eligible:true,potentialAmountMinor:10000,currency:'USD'}))
+ it('preserves the lower claim ceiling when the ledger already netted a refund', () => {
+   const finding = { ...supportedFinding(), dollarImpact: 75 }
+   const evidence = completeEvidence()
+   expect(evaluateEligibility(finding, evidence)).toMatchObject({ eligible: true, potentialAmountMinor: 7500, amountBreakdown: { ledgerAdjustmentMinor: 2500 } })
+   evidence.priorReturns = [{ method: 'refund', amountMinor: 2500, reference: 'Deposit 1', confirmedBy: 'Reviewer', confirmedAt: 123 }]
+   expect(evaluateEligibility(finding, evidence)).toMatchObject({ eligible: true, potentialAmountMinor: 7500, amountBreakdown: { ledgerAdjustmentMinor: 0 } })
+ })
+ it('deducts only referenced refunds and applied credits from the original overpayment', () => {
+   const evidence = completeEvidence()
+   const stamp = { confirmedBy: 'Reviewer', confirmedAt: 123 }
+   evidence.priorReturns = [
+     { ...stamp, method: 'refund', amountMinor: 1000, reference: 'BANK-1' },
+     { ...stamp, method: 'credit', amountMinor: 500, reference: 'CM-1', appliedToBill: 'BILL-2' },
+   ]
+   expect(evaluateEligibility(supportedFinding(), evidence)).toMatchObject({ eligible: true, potentialAmountMinor: 8500, amountBreakdown: { overpaymentMinor: 10000, refundedMinor: 1000, appliedCreditMinor: 500 } })
+   delete evidence.priorReturns[1].appliedToBill
+   expect(evaluateEligibility(supportedFinding(), evidence)).toMatchObject({ eligible: false, potentialAmountMinor: null })
+ })
  for (const [key] of EVIDENCE_CHECKS) it(`requires recorded ${key}`,()=>{const e=completeEvidence(); delete e.checks[key]; expect(evaluateEligibility(supportedFinding(),e).eligible).toBe(false)})
  it('rejects mismatched currency, unsettled payment, and duplicate payment identity',()=>{for(const patch of [{currency:'EUR'},{settled:false},{paymentId:'p0'}]) {const e=completeEvidence();Object.assign(e.payments[1],patch);expect(evaluateEligibility(supportedFinding(),e).eligible).toBe(false)}})
  it('requires reference, actor and time on every fact',()=>{const e=completeEvidence();e.payments[0].confirmedBy='';expect(evaluateEligibility(supportedFinding(),e).eligible).toBe(false)})

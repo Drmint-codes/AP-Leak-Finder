@@ -298,7 +298,9 @@ describe('customer-entered returns and proposed success fee', () => {
       expect(response.status).toBe(200)
       revision = response.body.revision
     }
-    await command('request', { requestedAmount: 1234.5 })
+    const request = { subject: 'Duplicate payment INV-1', body: 'Please return the extra payment.', recipientEmail: 'billing@acme.test', recipientConfirmed: true, method: 'refund', requestedAmount: 1234.5 }
+    await command('approve', { package: request, knownBeforeReclaim: false, knownBeforeNote: null })
+    await command('request', request)
     return command
   }
 

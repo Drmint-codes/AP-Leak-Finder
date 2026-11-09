@@ -30,14 +30,14 @@ describe('server case commands', () => {
     const state = (archived.project.environment as { caseStates: Record<string, CaseState> }).caseStates[findingId]
     expect(state).toMatchObject({ activeRequestGeneration: 2, approvedAt: null, requestedAmount: null, decision: null })
     expect(state.archivedRequests?.[0]).toMatchObject({ generation: 1, requestedAmount: 100, returnedAmountAtArchive: 30, legacyApprovedAt: 90 })
-    const pkg = { subject: 'New request', body: 'Please review.', recipientEmail: 'supplier@example.test', requestedAmount: 70, method: 'refund' }
+    const pkg = { subject: 'New request', body: 'Please review.', recipientEmail: 'supplier@example.test', recipientConfirmed: true, requestedAmount: 70, method: 'refund' }
     expect(() => send('decision', { decision: 'confirmed', reason: 'Too early' }, 2)).toThrow(/fresh evidence/i)
     expect(() => send('approve', { package: pkg, knownBeforeReclaim: false, knownBeforeNote: null }, 2)).toThrow()
     send('evidence', evidence, 2)
     send('decision', { decision: 'confirmed', reason: 'Reviewed again' }, 3)
     expect(() => send('approve', { package: { ...pkg, requestedAmount: 71 }, knownBeforeReclaim: false, knownBeforeNote: null }, 4)).toThrow(/earlier returns/i)
     send('approve', { package: pkg, knownBeforeReclaim: false, knownBeforeNote: null }, 4)
-    send('request', { requestedAmount: 70 }, 5)
+    send('request', pkg, 5)
     const late = send('historical_settlement', { generation: 1, amount: 10, method: 'refund', source: 'manual', reference: 'OLD-LATE', settledAt: 102 }, 6)
     const current = (late.project.environment as { caseStates: Record<string, CaseState> }).caseStates[findingId]
     expect(current).toMatchObject({ activeRequestGeneration: 2, requestedAmount: 70, recoveredAmount: 40 })
@@ -72,7 +72,7 @@ describe('server case commands', () => {
     const send = (type: 'approve' | 'request', input: unknown) => commands.execute('alice', 'alice@example.test', 'stale', {
       commandId: randomUUID(), expectedRevision: 1, findingId, type, input,
     })
-    const pkg = { subject: 'Duplicate payment', body: 'Please review the payments.', recipientEmail: 'supplier@example.test', requestedAmount: 100, method: 'refund' }
+    const pkg = { subject: 'Duplicate payment', body: 'Please review the payments.', recipientEmail: 'supplier@example.test', recipientConfirmed: true, requestedAmount: 100, method: 'refund' }
     expect(() => send('approve', { package: pkg, knownBeforeReclaim: false, knownBeforeNote: null })).toThrow(/revalidat/i)
     expect(() => send('request', { requestedAmount: 100 })).toThrow(/revalidat/i)
     db.close()
@@ -115,16 +115,21 @@ describe('server case commands', () => {
 
     const decision = send('decision', { decision: 'confirmed', reason: 'I reviewed the two rows.' }, 1)
     expect(decision.revision).toBe(2)
+    const pkg = { subject: 'Duplicate payment', body: 'Please review the two payments.', recipientEmail: 'supplier@example.test', recipientConfirmed: true, requestedAmount: 100, method: 'refund' }
+    expect(() => send('approve', { package: pkg, knownBeforeReclaim: false, knownBeforeNote: null }, 2)).toThrow(/complete the evidence review/i)
     const evidenceSaved = send('evidence', evidence, 2)
     expect(evidenceSaved.revision).toBe(3)
-    const pkg = { subject: 'Duplicate payment', body: 'Please review the two payments.', recipientEmail: 'supplier@example.test', requestedAmount: 100, method: 'refund' }
+    for (const input of [{ ...pkg, recipientConfirmed: false }, { ...pkg, recipientEmail: '' }]) {
+      expect(() => send('approve', { package: input, knownBeforeReclaim: false, knownBeforeNote: null }, 3)).toThrow(/malformed/i)
+    }
     expect(() => send('approve', { package: { ...pkg, requestedAmount: 101 }, knownBeforeReclaim: false, knownBeforeNote: null }, 3)).toThrow(/evidenced|within/i)
     const approval = send('approve', { package: pkg, knownBeforeReclaim: false, knownBeforeNote: null }, 3)
     expect(approval.revision).toBe(4)
+    expect(() => send('request', { ...pkg, evidenceAttachment: 'Changed after approval' }, 4)).toThrow(/approve the exact request/i)
     const id = randomUUID()
-    const request = send('request', { requestedAmount: 100 }, 4, id)
+    const request = send('request', pkg, 4, id)
     expect(request.revision).toBe(5)
-    expect(send('request', { requestedAmount: 100 }, 4, id)).toMatchObject({ revision: 5, replayed: true })
+    expect(send('request', pkg, 4, id)).toMatchObject({ revision: 5, replayed: true })
     expect(() => send('settlement', { amount: 10, method: 'refund', source: 'manual', reference: 'RETURN-1', settledAt: Date.now() }, 4)).toThrow(/another device/i)
     expect(() => commands.execute('bob', 'bob@example.test', 'audit1', { commandId: randomUUID(), expectedRevision: 5, findingId, type: 'settlement', input: { amount: 100, method: 'refund', source: 'manual', reference: 'RETURN-1', settledAt: Date.now() } })).toThrow(/not in this account/i)
     const paid = send('settlement', { amount: 100, method: 'refund', source: 'manual', reference: 'RETURN-1', settledAt: Date.now() }, 5)

@@ -14,13 +14,14 @@ import type { APRecord, Finding } from '@/types'
 import { FINDING_TYPE_LABELS } from '@/lib/labels'
 import { recommendRecoveryMethod, recoveryNextAction } from '@/recovery/model'
 import { recoveryLedger, RECOVERY_LEDGER_LABEL } from '@/recovery/ledger'
-import { activeReturned, verifiedReturned } from '@/recovery/financials'
+import { activeReturned, validSettlements, verifiedReturned } from '@/recovery/financials'
+import { latestVendorPosition } from '@/recovery/vendorStatus'
 import { playbookFor } from '@/recovery/playbooks'
 import { evidenceOf, openQuestion, timelineFor } from '../selectors'
 import { StatusChip } from './StatusChip'
 import { InternalReviewPanel, METHOD_LABEL, RecoveryRequestPanel, type RequestPackage } from './RecoveryPanels'
 import type { GmailSendReceipt } from '@/lib/gmailApi'
-import { GmailFollowUp } from '@/components/gmail/Gmail'
+import { GmailAttemptActivity, GmailFollowUp } from '@/components/gmail/Gmail'
 import { RecoveryAccountingPanel, RecoveryProgressPanel } from './RecoveryJourney'
 import { KIND_LABEL, KindChip } from './KindChip'
 import { Strength } from './Strength'
@@ -31,6 +32,9 @@ interface CaseDetailProps {
   finding: Finding
   findings?: Finding[]
   projectId?: string
+  sample?: boolean
+  owner?: string | null
+  sampleEvidence?: RecoveryEvidence
   onSaveEvidence?: (findingId: string, evidence: RecoveryEvidence) => void
   state: CaseState
   records: APRecord[]
@@ -116,6 +120,16 @@ const COLUMNS: Column[] = [
 ]
 
 /** The records behind the finding. Values repeated across rows are what made them match, so they are marked. */
+function EvidenceReference({ reference }: { reference: string }) {
+  try {
+    const url = new URL(reference)
+    if (url.protocol === 'https:' || url.protocol === 'http:') return <a href={url.href} target="_blank" rel="noreferrer">{reference}</a>
+  } catch {
+    // File names and accounting references are displayed as text.
+  }
+  return <>{reference}</>
+}
+
 function Evidence({ finding, checklist = true }: { finding: Finding; checklist?: boolean }) {
   const records = finding.relatedRecords
   const showVendor = new Set(records.map((r) => r.vendor.trim().toLowerCase())).size > 1
@@ -137,6 +151,15 @@ function Evidence({ finding, checklist = true }: { finding: Finding; checklist?:
           </p>
         </div>
       </div>
+      {finding.evidence ? (
+        <ul className="wk-panelcard-body">
+          <li>Bill {finding.evidence.obligation.obligationId} · <EvidenceReference reference={finding.evidence.obligation.reference} /></li>
+          {finding.evidence.payments.map((payment) => <li key={payment.recordId}>Payment {payment.paymentId} · <EvidenceReference reference={payment.reference} /></li>)}
+          {finding.evidence.priorReturns?.map((entry, index) => <li key={index}>{entry.method === 'refund' ? 'Refund' : 'Applied credit'} · <EvidenceReference reference={entry.reference} /></li>)}
+        </ul>
+      ) : null}
+      <details className="wk-panelcard-body wk-evq-details">
+      <summary>Matched ledger rows</summary>
       <div className="wk-evidence-table" style={{ overflowX: 'auto' }}>
         <table className="wk-table">
           <thead>
@@ -170,6 +193,7 @@ function Evidence({ finding, checklist = true }: { finding: Finding; checklist?:
           </li>
         ))}
       </ul>
+      </details>
       {playbook ? (
         <div className="wk-panelcard-body wk-subsection wk-stack">
           <h3 className="wk-subhead"><ListChecks aria-hidden="true" />Before asking the vendor</h3>
@@ -255,6 +279,22 @@ export function CaseDetail(props: CaseDetailProps) {
   const history = state.history ?? []
   const moneyEvents = internal ? [] : recoveryLedger(state)
   const now = Date.now()
+  const prior = gate.amountBreakdown
+  const settlements = validSettlements(state)
+  const refunds = prior.refundedMinor + settlements.filter((entry) => entry.method === 'refund').reduce((sum, entry) => sum + Math.round(entry.amount * 100), 0)
+  const credits = prior.appliedCreditMinor + settlements.filter((entry) => entry.method !== 'refund').reduce((sum, entry) => sum + Math.round(entry.amount * 100), 0)
+  const openAmount = Math.max(0, prior.overpaymentMinor - refunds - credits - prior.ledgerAdjustmentMinor)
+  const response = latestVendorPosition(state)
+  const waitingForReturn = state.recoveryStage === 'requested' && openAmount > 0
+  const supplier = finding.evidence?.supplier
+  const entityId = finding.evidence?.entity?.entityId
+  const contactMatches = supplier && entityId ? findings.flatMap((candidate) => {
+    const evidence = candidate.evidence
+    const contact = evidence?.supplier?.contact
+    return evidence?.entity?.entityId === entityId && evidence.supplier?.supplierId === supplier.supplierId && contact?.source === 'supplier_record' ? [contact] : []
+  }) : []
+  const suggestedContact = supplier?.contact ?? (new Set(contactMatches.map((contact) => contact.email.toLowerCase())).size === 1 ? contactMatches[0] : undefined)
+  const caseOwner = history.findLast((event) => event.action === 'recovery:approved')?.actor ?? props.owner ?? 'Workspace account'
   const nextAction = state.recoveryStage ? recoveryNextAction(state, now, internal) : null
   const done = stepsDone(state)
   const currentStep = done.findIndex((isDone) => !isDone)
@@ -308,7 +348,9 @@ export function CaseDetail(props: CaseDetailProps) {
       <RecoveryRequestPanel
         key={finding.id}
         projectId={projectId}
+        sample={props.sample}
         finding={finding}
+        suggestedContact={suggestedContact}
         state={state}
         sender={sender}
         limits={entitlements.limits}
@@ -356,9 +398,11 @@ export function CaseDetail(props: CaseDetailProps) {
       <div className="wk-case">
         <div className="wk-case-main">
           <section className="wk-panelcard" data-m="what" aria-labelledby="case-what">
-            <div className="wk-panelcard-head"><h2 id="case-what">What happened</h2></div>
+            <div className="wk-panelcard-head"><h2 id="case-what">Why it was flagged</h2></div>
             <div className="wk-panelcard-body wk-case-summary">
               <p>{finding.explanation}</p>
+              <p className="wk-field-hint">{typeLabel} · {findingReference(finding)}</p>
+              {duplicate ? <p className="wk-field-hint">{gate.eligible ? 'The cited records support a claim after reviewer confirmation.' : 'Possible issue. Supplier outreach requires a completed evidence review.'}</p> : null}
               {question && (state.decision === null || state.decision === 'needs_info') ? (
                 <div className="wk-question" role="note">
                   <TriangleAlert aria-hidden="true" />
@@ -367,6 +411,27 @@ export function CaseDetail(props: CaseDetailProps) {
               ) : null}
             </div>
           </section>
+
+          {duplicate && gate.eligible ? (
+            <section className="wk-panelcard" aria-labelledby="case-amount">
+              <div className="wk-panelcard-head"><div><h2 id="case-amount">Amount</h2><p>Outstanding <strong>{formatCurrency(openAmount / 100)}</strong></p></div></div>
+              <div className="wk-panelcard-body wk-stack">
+                <details className="wk-evq-details"><summary>Show calculation</summary>
+                  <dl className="wk-kv">
+                    <div><dt>Original overpayment</dt><dd>{formatCurrency(prior.overpaymentMinor / 100)}</dd></div>
+                    <div><dt>Confirmed refunds</dt><dd>−{formatCurrency(refunds / 100)}</dd></div>
+                    <div><dt>Confirmed applied credits</dt><dd>−{formatCurrency(credits / 100)}</dd></div>
+                    {prior.ledgerAdjustmentMinor ? <div><dt>Adjustment already included in the ledger flag</dt><dd>−{formatCurrency(prior.ledgerAdjustmentMinor / 100)}</dd></div> : null}
+                    <div><dt>Outstanding</dt><dd>{formatCurrency(openAmount / 100)}</dd></div>
+                  </dl>
+                  <p className="wk-field-hint">Returns are confirmed by your team against the cited records.</p>
+                </details>
+                {waitingForReturn && response?.status === 'promised' ? <p>Promised {response.method === 'credit' ? 'credit' : 'refund'}{response.amount ? ` · ${formatCurrency(response.amount)}` : ''} · awaiting confirmation of the balance</p> : null}
+                {waitingForReturn && response?.status === 'credit_issued' ? <p>Issued credit{response.amount ? ` · ${formatCurrency(response.amount)}` : ''} · awaiting confirmation of application</p> : null}
+                {state.recoveryRequestedAt ? <p className="wk-field-hint">{props.sample ? 'Simulated send · ' : ''}Case owner · {caseOwner}</p> : null}
+              </div>
+            </section>
+          ) : null}
 
           {workPanel ? <div className="wk-case-work" data-m="work">{workPanel}</div> : null}
 
@@ -394,6 +459,7 @@ export function CaseDetail(props: CaseDetailProps) {
                     {request.recoverySubject ? <p>Subject: {request.recoverySubject}</p> : null}
                     {!request.recoverySentEmail && request.recoveryRecipientEmail ? <p>Recipient recorded: {request.recoveryRecipientEmail}</p> : null}
                     {request.recoveryDraft ? <details><summary>Original request text</summary><p style={{ whiteSpace: 'pre-wrap' }}>{request.recoveryDraft}</p></details> : null}
+                    {request.recoveryEvidenceAttachment ? <details><summary>Original payment-evidence.txt</summary><pre style={{ whiteSpace: 'pre-wrap' }}>{request.recoveryEvidenceAttachment}</pre></details> : null}
                     {request.vendorUpdates?.map((update, index) => <p key={`${update.at}-${index}`}>{longDate(update.at)} · {update.status.replace(/_/g, ' ')}: {update.note}</p>)}
                     {request.recoveryFollowUps?.map((receipt) => <p key={receipt.messageId}>Follow-up sent {longDate(receipt.sentAt)} to {receipt.to}</p>)}
                     <p>{formatCurrency((state.recoverySettlements ?? []).filter((entry) => (entry.requestGeneration ?? 1) === request.generation).reduce((sum, entry) => sum + entry.amount, 0))} in customer-recorded returns for this request</p>
@@ -408,7 +474,7 @@ export function CaseDetail(props: CaseDetailProps) {
           {/* Duplicates ask these checks in the evidence questions below, so the short checklist would repeat them. */}
           <Evidence finding={finding} checklist={!canEditEvidence} />
 
-          {canEditEvidence && onSaveEvidence ? <EvidencePanel key={`evidence-${finding.id}`} finding={finding} findings={findings} imports={imports} onSave={(evidence) => onSaveEvidence(finding.id, evidence)} /> : null}
+          {canEditEvidence && onSaveEvidence ? <EvidencePanel key={`evidence-${finding.id}`} finding={finding} findings={findings} imports={imports} initialEvidence={props.sampleEvidence} onSave={(evidence) => onSaveEvidence(finding.id, evidence)} /> : null}
 
           {!internal ? <RecoveryAccountingPanel finding={finding} state={state} onReconcile={onReconcileRecovery} /> : null}
 
@@ -439,11 +505,19 @@ export function CaseDetail(props: CaseDetailProps) {
           ) : null}
 
           <section className="wk-panelcard" aria-labelledby="case-history-title">
-            <div className="wk-panelcard-head"><h2 id="case-history-title">History</h2></div>
+            <div className="wk-panelcard-head"><h2 id="case-history-title">Activity</h2></div>
             <div className="wk-panelcard-body">
               {history.length > 0 && !entitlements.limits.fullRecoveryWorkflow ? (
                 <Locked title="The full case history is part of Growth and Flat" note="Who did what, when, with the amounts and methods.">{timeline}</Locked>
               ) : timeline}
+              {state.recoveryRequestedAt && state.recoverySubject ? <details className="wk-evq-details">
+                <summary>Supplier request · {state.recoverySimulated ? 'simulated' : state.recoverySentEmail ? 'Gmail accepted' : 'sent manually'}</summary>
+                <p>To {state.recoveryRecipientEmail} · {stamp(state.recoveryRequestedAt)}</p>
+                <p>{state.recoverySubject}</p>
+                <p style={{ whiteSpace: 'pre-wrap' }}>{state.recoveryDraft}</p>
+                {state.recoveryEvidenceAttachment ? <details><summary>payment-evidence.txt</summary><pre style={{ whiteSpace: 'pre-wrap' }}>{state.recoveryEvidenceAttachment}</pre></details> : null}
+              </details> : null}
+              {!internal && projectId ? <GmailAttemptActivity key={`${projectId}-${finding.id}`} projectId={projectId} findingId={finding.id} /> : null}
             </div>
           </section>
         </div>

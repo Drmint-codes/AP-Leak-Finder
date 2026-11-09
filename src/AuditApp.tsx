@@ -74,7 +74,7 @@ import { projectSync } from '@/ledger/projectSync'
 import type { SenderProfile } from '@/lib/senderProfile'
 import type { RequestPackage } from '@/workspace/views/RecoveryPanels'
 import { overviewSummary, findCaseView } from '@/ledger/views'
-import { getSampleLedger } from '@/data/sampleLedger'
+import { getRecoverySampleEvidence, getRecoverySampleLedger, getSampleLedger } from '@/data/sampleLedger'
 import type { ImportInput, QuickBooksImportContext } from '@/components/audit/ImportPanel'
 import { describeQuickBooksSync, lastQuickBooksPull, mergeQuickBooksSync, planQuickBooksSync } from '@/ledger/quickbooksSync'
 import { QuickBooksSyncStatus } from '@/components/audit/QuickBooksSource'
@@ -106,7 +106,7 @@ export function AuditApp() {
   const account = auth?.user && !auth.user.isGuest ? auth.user : null
   // Someone who arrived with a deliberate entry (`?entry=upload`, `?entry=sample`, `?sample=1`)
   // came to do that first. Kept for the whole visit, since running it clears the entry from the route.
-  const [arrivedForAudit] = useState(() => route.entry !== null || new URLSearchParams(window.location.search).get('sample') === '1')
+  const [arrivedForAudit] = useState(() => route.entry !== null || ['1', 'recovery'].includes(new URLSearchParams(window.location.search).get('sample') ?? ''))
   // First run: the account (or guest tab) has not been through onboarding. For an arrival
   // like the above, onboarding waits for their next visit rather than standing in the way.
   const onboardingOpen =
@@ -259,6 +259,8 @@ export function AuditApp() {
           if (!current || options.replaceEnvironment) void projectSync.flush().then(() => auth?.refreshEntitlements())
           navigate({ projectId: saved.id, mode: 'dashboard', caseId: null, draft: false, entry: null }, { replace: true })
         } else {
+          projectRef.current = null
+          setProject(null)
           navigate({ projectId: null, mode: 'dashboard', caseId: null, draft: false, entry: null }, { replace: true })
         }
         environmentRef.current = next
@@ -294,6 +296,10 @@ export function AuditApp() {
   // string at all) so returning to /audit picks up exactly where it left off.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    if (params.get('sample') === 'recovery') {
+      void runImport({ sourceLabel: 'Sample recovery exercise', mode: 'sample', parsed: getRecoverySampleLedger() }, { replaceEnvironment: true, persist: false })
+      return
+    }
     if (!environmentRef.current) {
       if (params.get('sample') === '1') void runImport(sampleImportInput(), { replaceEnvironment: true, persist: false })
       return
@@ -474,16 +480,17 @@ export function AuditApp() {
       persistCaseState(findingId, (current) => {
         const finding = environmentRef.current?.result.findings.find((row) => row.id === findingId)
         if (finding?.class !== 'recoverable') return markRecoveryRequested(updateRecoveryPackage(current, { subject: pkg.subject, body: pkg.body, requestedResolution: pkg.method }), finding ? Math.min(pkg.requestedAmount, finding.dollarImpact) : pkg.requestedAmount)
-        if (current.recoverySubject !== pkg.subject || current.recoveryDraft !== pkg.body || current.requestedAmount !== pkg.requestedAmount || current.requestedResolution !== pkg.method || (current.recoveryRecipientEmail ?? '') !== pkg.recipientEmail) return current
-        return startRecoveryRequest(current, pkg.requestedAmount, Date.now(), finding?.dollarImpact)
-      }, { type: 'request', input: { requestedAmount: pkg.requestedAmount } })
+        if (current.recoverySubject !== pkg.subject || current.recoveryDraft !== pkg.body || current.requestedAmount !== pkg.requestedAmount || current.requestedResolution !== pkg.method || (current.recoveryRecipientEmail ?? '') !== pkg.recipientEmail || (current.recoveryEvidenceAttachment ?? null) !== (pkg.evidenceAttachment ?? null) || !pkg.recipientConfirmed) return current
+        const requested = startRecoveryRequest(current, pkg.requestedAmount, Date.now(), finding?.dollarImpact)
+        return sampleSession ? { ...requested, recoverySimulated: true } : requested
+      }, { type: 'request', input: pkg })
     },
-    [persistCaseState, recoveryBlocked]
+    [persistCaseState, recoveryBlocked, sampleSession]
   )
 
   const handleApproveRecovery = useCallback((findingId: string, pkg: RequestPackage, knownBeforeReclaim: boolean, knownBeforeNote: string | null) => {
     if (recoveryBlocked(findingId, pkg.requestedAmount)) return
-    persistCaseState(findingId, (current) => approveRecovery(updateRecoveryPackage(current, { subject: pkg.subject, body: pkg.body, recipientEmail: pkg.recipientEmail, requestedResolution: pkg.method, requestedAmount: pkg.requestedAmount }), { knownBeforeReclaim, knownBeforeNote }), { type: 'approve', input: { package: pkg, knownBeforeReclaim, knownBeforeNote } })
+    persistCaseState(findingId, (current) => approveRecovery(updateRecoveryPackage(current, { ...pkg, requestedResolution: pkg.method }), { knownBeforeReclaim, knownBeforeNote }), { type: 'approve', input: { package: pkg, knownBeforeReclaim, knownBeforeNote } })
   }, [persistCaseState, recoveryBlocked])
 
   // For a team where the approver is also the sender: one step, one save, and
@@ -491,7 +498,7 @@ export function AuditApp() {
   const handleApproveAndSend = useCallback((findingId: string, pkg: RequestPackage, knownBeforeReclaim: boolean, knownBeforeNote: string | null) => {
     if (recoveryBlocked(findingId, pkg.requestedAmount)) return
     persistCaseState(findingId, (current) => {
-      const approved = approveRecovery(updateRecoveryPackage(current, { subject: pkg.subject, body: pkg.body, recipientEmail: pkg.recipientEmail, requestedResolution: pkg.method, requestedAmount: pkg.requestedAmount }), { knownBeforeReclaim, knownBeforeNote })
+      const approved = approveRecovery(updateRecoveryPackage(current, { ...pkg, requestedResolution: pkg.method }), { knownBeforeReclaim, knownBeforeNote })
       return startRecoveryRequest(approved, pkg.requestedAmount)
     }, { type: 'approve_and_request', input: { package: pkg, knownBeforeReclaim, knownBeforeNote } })
   }, [persistCaseState, recoveryBlocked])
@@ -611,7 +618,7 @@ export function AuditApp() {
   const handleImport = useCallback(
     (input: ImportInput) => {
       const target = input.quickbooks ? quickBooksTarget(input.quickbooks.companyName) : null
-      const replaceEnvironment = !target && (importIntent === 'new' || route.entry === 'upload')
+      const replaceEnvironment = !target && (sampleSession || importIntent === 'new' || route.entry === 'upload')
       // Free: each ledger is audited once. A repeat — the same file, a renamed
       // copy, or a trimmed piece of it — is flagged here, before anything runs.
       // Re-importing a QuickBooks company into its own audit is a sync, never a repeat.
@@ -625,7 +632,7 @@ export function AuditApp() {
       setEntryError(null)
       return runImport({ sourceLabel: input.sourceLabel, mode: input.mode, parsed: input.parsed, ...(input.quickbooks ? { quickbooks: input.quickbooks } : {}) }, { replaceEnvironment, ...(target ? { targetProjectId: target.id } : {}) })
     },
-    [importIntent, route.entry, runImport, entitlements.limits.blocksRepeatUploads, quickBooksTarget]
+    [importIntent, route.entry, runImport, entitlements.limits.blocksRepeatUploads, quickBooksTarget, sampleSession]
   )
 
   const handleOpenProject = useCallback(
@@ -873,7 +880,10 @@ export function AuditApp() {
             <CaseDetail
               finding={activeFinding}
               findings={environment.result.findings}
-              projectId={project?.id}
+              projectId={sampleSession ? undefined : project?.id}
+              sample={sampleSession}
+              owner={actor}
+              sampleEvidence={sampleSession ? getRecoverySampleEvidence(activeCase.finding) : undefined}
               onSaveEvidence={handleSaveEvidence}
               state={activeCase.state}
               records={environment.records}

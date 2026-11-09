@@ -56,7 +56,7 @@ describe('Evidence review in plain words', () => {
     const { container } = render(<EvidencePanel finding={finding} findings={env.result.findings} imports={env.imports} onSave={() => {}} />)
     const form = container.querySelector('form')!
     for (const term of ['evidence gate', 'minor units', 'obligation', 'eligibility', finding.relatedRecords[0].id]) expect(form.textContent!.toLowerCase()).not.toContain(term.toLowerCase())
-    expect(container.querySelector('details')!.textContent).toContain(finding.ruleId ?? finding.type)
+    expect(screen.getByText('Details', { selector: 'summary' }).parentElement!.textContent).toContain(finding.ruleId ?? finding.type)
   })
 
   it('takes the bill amount in dollars and saves it in cents', () => {

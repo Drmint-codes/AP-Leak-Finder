@@ -3,7 +3,7 @@ import type { DatabaseSync } from 'node:sqlite'
 import { z } from 'zod'
 import { HttpError } from './http.ts'
 import type { ProjectStore } from './projectStore.ts'
-import { confirmCase, markExpected, markNeedsInfo, reopenDecision, reopenOutcome, updateRecoveryPackage, withHistory, type CaseState, type RecoveryVerification, type VendorUpdate } from '../src/ledger/caseState.ts'
+import { confirmCase, markExpected, markNeedsInfo, recordEvidenceReview, reopenDecision, reopenOutcome, updateRecoveryPackage, withHistory, type CaseState, type RecoveryVerification, type VendorUpdate } from '../src/ledger/caseState.ts'
 import { approveRecovery, beginNewRequestReview, closeWithoutRecovery, recordEmailSent, recordFollowUpSent, recordHistoricalSettlement, recordVendorUpdate, reconcileRecovery, reopenRemainingBalance, setContactHold, setFollowUpAfterDays, setNextFollowUp, startRecoveryRequest, verifyRecovery } from '../src/recovery/model.ts'
 import { activeReturned, validSettlements, verifiedReturned } from '../src/recovery/financials.ts'
 import { assertRecoveryEligible, evaluateEligibility, type RecoveryEvidence } from '../src/recovery/eligibility.ts'
@@ -12,14 +12,15 @@ import type { Finding } from '../src/types.ts'
 const text = z.string().trim().max(5000)
 const money = z.number().finite().positive().refine((n) => Number.isSafeInteger(Math.round(n * 100)) && Math.abs(n * 100 - Math.round(n * 100)) < 0.000001)
 const method = z.enum(['refund', 'credit', 'offset'])
-const packageSchema = z.object({ subject: text.max(300), body: text, recipientEmail: z.email().max(320), requestedAmount: money, method })
+const packageSchema = z.object({ subject: text.min(1).max(300).refine((value) => !/[\r\n]/.test(value)), body: text.min(1), evidenceAttachment: text.min(1).nullable().optional(), recipientEmail: z.email().max(320), recipientConfirmed: z.literal(true), requestedAmount: money, method })
 const reference = z.object({ reference: text.min(1).max(300) })
 const evidenceSchema = z.object({
   entity: reference.extend({ entityId: text.min(1).max(150) }),
-  supplier: reference.extend({ supplierId: text.min(1).max(150) }),
+  supplier: reference.extend({ supplierId: text.min(1).max(150), contact: z.object({ email: text.max(320).pipe(z.email()), source: z.enum(['supplier_record', 'document']), reference: text.min(1).max(300) }).optional() }),
   payments: z.array(reference.extend({ recordId: text.min(1).max(150), paymentId: text.min(1).max(150), obligationId: text.min(1).max(150), amountMinor: z.number().int().positive(), currency: z.string().length(3), settled: z.boolean() })).min(2).max(30),
   obligation: reference.extend({ obligationId: text.min(1).max(150), amountMinor: z.number().int().positive(), currency: z.string().length(3) }),
   checks: z.record(z.string(), z.object({ reference: text, confirmed: z.boolean() })),
+  priorReturns: z.array(reference.extend({ method: z.enum(['refund', 'credit']), amountMinor: z.number().int().positive(), appliedToBill: text.max(300).optional() })).max(30).optional(),
   contradictions: z.array(text.max(300)).max(30),
   notes: text,
 })
@@ -53,6 +54,14 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
   if (!env || !finding) throw new HttpError(404, 'That case is not in this account.')
   const states = env.caseStates ?? {}
   const prior = states[cmd.findingId] ?? { decision: null, reason: null, decidedAt: null, recoveryStage: null }
+  const requestChange = ['decision', 'evidence', 'approve', 'approve_and_request', 'request', 'reopen'].includes(cmd.type)
+  const priorGeneration = prior.activeRequestGeneration ?? 1
+  if (requestChange && prior.recoveryStage === 'confirmed' &&
+    db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'gmail_sends'").get()) {
+    const send = db.prepare("SELECT status FROM gmail_sends WHERE user_id = ? AND project_id = ? AND finding_id = ? AND generation = ? AND status IN ('sending', 'sent')")
+      .get(userId, projectId, cmd.findingId, priorGeneration)
+    if (send) throw new HttpError(409, 'A Gmail send is in progress or has a receipt waiting to be recorded. Check the send before changing the request.', 'gmail_receipt_pending')
+  }
   if (prior.requiresRevalidation && (cmd.type === 'approve' || cmd.type === 'approve_and_request' || cmd.type === 'request')) {
     throw new HttpError(409, 'Revalidate the case evidence before approving or recording another request.', 'revalidation_required')
   }
@@ -62,7 +71,6 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
   let next: CaseState = prior
   let revisedFinding: Finding | null = null
   const all = (env.result?.findings ?? []).map((row) => factFinding(env, row.id)!).filter(Boolean)
-  const priorGeneration = prior.activeRequestGeneration ?? 1
   const priorReturnedMinor = Math.round((verifiedReturned(prior) - activeReturned(prior)) * 100)
   const checkNewAmount = (amount: number) => {
     const gate = evaluateEligibility(finding, finding.evidence, all)
@@ -92,17 +100,20 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
         const raw = parse(evidenceSchema, cmd.input)
         const sourceIds = finding.relatedRecords.map((record) => record.id).sort()
         if (raw.payments.map((payment) => payment.recordId).sort().join('|') !== sourceIds.join('|')) throw new Error('Payment evidence must refer to exactly the source rows in this check.')
+        const returnRefs = new Set(validSettlements(prior).map((entry) => entry.reference.trim().toLowerCase()))
+        if (raw.priorReturns?.some((entry) => returnRefs.has(entry.reference.toLowerCase()))) throw new Error('This return is already recorded against an earlier request.')
         const stamp = <T extends { reference: string }>(entry: T): T & { confirmedBy: string; confirmedAt: number } => ({ ...entry, confirmedBy: actor, confirmedAt: at })
         const evidence: RecoveryEvidence = {
           entity: stamp(raw.entity), supplier: stamp(raw.supplier),
           payments: raw.payments.map(stamp), obligation: stamp(raw.obligation),
           checks: Object.fromEntries(Object.entries(raw.checks).map(([key, value]) => [key, { ...stamp(value), confirmed: value.confirmed }])),
+          priorReturns: raw.priorReturns?.map(stamp),
           contradictions: raw.contradictions, notes: raw.notes,
         }
         const candidate = { ...finding, evidence, contradictoryEvidence: [] }
         const gate = evaluateEligibility(candidate, evidence, all)
         revisedFinding = { ...candidate, ...gate, classification: gate.eligible ? 'recovery_candidate' : 'review_needed', class: gate.eligible ? 'recoverable' : 'review', requiresRevalidation: !gate.eligible }
-        next = { ...prior, requiresRevalidation: !gate.eligible, approvedAt: null }
+        next = recordEvidenceReview(prior, gate.eligible, actor, at)
         break
       }
       case 'approve':
@@ -111,15 +122,18 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
         if (prior.decision !== 'confirmed' || prior.recoveryStage !== 'confirmed') throw new Error('Review the case before approval.')
         assertRecoveryEligible(finding, all, data.package.requestedAmount)
         checkNewAmount(data.package.requestedAmount)
-        const approved = approveRecovery(updateRecoveryPackage(prior, { ...data.package, requestedResolution: data.package.method, requestedAmount: data.package.requestedAmount, recipientEmail: data.package.recipientEmail }), { at, knownBeforeReclaim: data.knownBeforeReclaim, knownBeforeNote: data.knownBeforeNote })
+        const approved = approveRecovery(updateRecoveryPackage(prior, { ...data.package, evidenceAttachment: data.package.evidenceAttachment ?? null, requestedResolution: data.package.method }), { at, knownBeforeReclaim: data.knownBeforeReclaim, knownBeforeNote: data.knownBeforeNote })
         next = cmd.type === 'approve_and_request' ? startRecoveryRequest(approved, data.package.requestedAmount, at, finding.dollarImpact) : approved
         break
       }
       case 'request': {
-        const data = parse(z.object({ requestedAmount: money }), cmd.input)
+        const data = parse(packageSchema, cmd.input)
         assertRecoveryEligible(finding, all, data.requestedAmount)
         checkNewAmount(data.requestedAmount)
-        if (Math.round((prior.requestedAmount ?? 0) * 100) !== Math.round(data.requestedAmount * 100)) throw new Error('The amount must match the approved request.')
+        if (prior.requestedAmount !== data.requestedAmount || prior.recoveryRecipientEmail !== data.recipientEmail || prior.recoverySubject !== data.subject ||
+          prior.recoveryDraft !== data.body || prior.requestedResolution !== data.method || (prior.recoveryEvidenceAttachment ?? null) !== (data.evidenceAttachment ?? null)) {
+          throw new Error('Approve the exact request before marking it sent.')
+        }
         next = startRecoveryRequest(prior, data.requestedAmount, at, finding.dollarImpact)
         break
       }
@@ -133,11 +147,12 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
       case 'followup_sent': {
         const data = parse(z.object({ messageId: text.min(1).max(300) }), cmd.input)
         const table = cmd.type === 'email_sent' ? 'gmail_sends' : 'gmail_follow_ups'
-        const sent = db.prepare(`SELECT message_id, from_email, to_email, cc, sent_at FROM ${table} WHERE user_id = ? AND project_id = ? AND finding_id = ? AND message_id = ? AND status = 'sent'`)
-          .get(userId, projectId, cmd.findingId, data.messageId) as { message_id: string; from_email: string; to_email: string; cc: string; sent_at: number } | undefined
+        const amountColumn = cmd.type === 'email_sent' ? 'amount_minor' : 'NULL AS amount_minor'
+        const sent = db.prepare(`SELECT message_id, from_email, to_email, cc, sent_at, ${amountColumn} FROM ${table} WHERE user_id = ? AND project_id = ? AND finding_id = ? AND generation = ? AND message_id = ? AND status = 'sent'`)
+          .get(userId, projectId, cmd.findingId, priorGeneration, data.messageId) as { message_id: string; from_email: string; to_email: string; cc: string; sent_at: number; amount_minor: number | null } | undefined
         if (!sent) throw new Error('This Gmail send is not recorded for this account and case.')
         const receipt = { channel: 'gmail' as const, messageId: sent.message_id, from: sent.from_email, to: sent.to_email, cc: sent.cc ? sent.cc.split(',') : [], sentAt: sent.sent_at }
-        next = cmd.type === 'email_sent' ? recordEmailSent(prior, receipt, prior.requestedAmount ?? 0) : recordFollowUpSent(prior, receipt)
+        next = cmd.type === 'email_sent' ? recordEmailSent(prior, receipt, (sent.amount_minor ?? 0) / 100) : recordFollowUpSent(prior, receipt)
         break
       }
       case 'followup_days': {
@@ -158,6 +173,7 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
       case 'settlement': {
         const data = parse(z.object({ amount: money, method, source: z.enum(['bank', 'accounting', 'document', 'manual']), reference: text.min(1).max(300), settledAt: z.number().finite().positive(), appliedToBill: text.optional() }), cmd.input)
         if (data.settledAt > at + 60_000) throw new Error('A return cannot be dated in the future.')
+        if (finding.evidence?.priorReturns?.some((entry) => entry.reference.trim().toLowerCase() === data.reference.toLowerCase())) throw new Error('This return was already included in the evidence review.')
         const key = `${data.method}|${data.reference.toLowerCase()}|${data.appliedToBill?.toLowerCase() ?? ''}`
         const allStates = Object.entries(states)
         if (allStates.some(([id, state]) => id !== cmd.findingId && (state.recoverySettlements ?? []).some((entry) => `${entry.method}|${entry.reference.toLowerCase()}|${entry.appliedToBill?.toLowerCase() ?? ''}` === key))) throw new Error('This return reference is already used by another case in this project.')
@@ -167,6 +183,7 @@ function applyCommand(db: DatabaseSync, userId: string, projectId: string, proje
       case 'historical_settlement': {
         const data = parse(z.object({ generation: z.number().int().positive(), amount: money, method, source: z.enum(['bank', 'accounting', 'document', 'manual']), reference: text.min(1).max(300), settledAt: z.number().finite().positive(), appliedToBill: text.optional() }), cmd.input)
         if (data.settledAt > at + 60_000) throw new Error('A return cannot be dated in the future.')
+        if (finding.evidence?.priorReturns?.some((entry) => entry.reference.trim().toLowerCase() === data.reference.toLowerCase())) throw new Error('This return was already included in the evidence review.')
         const archived = prior.archivedRequests?.find((request) => request.generation === data.generation)
         if (!archived) throw new Error('Select an archived request for this return.')
         if ((data.method === 'credit' || data.method === 'offset') && !data.appliedToBill?.trim()) throw new Error('Enter the bill where the credit was applied.')

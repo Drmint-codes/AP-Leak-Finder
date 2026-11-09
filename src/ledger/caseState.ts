@@ -99,10 +99,12 @@ export interface CaseState {
   history?: CaseEvent[]
   /** User-edited recovery package fields. Optional so persisted ledgers remain compatible. */
   recoveryDraft?: string | null
+  recoveryEvidenceAttachment?: string | null
   recoverySubject?: string | null
   recoveryRecipientEmail?: string | null
   requestedResolution?: RecoveryMethod | null
   recoveryRequestedAt?: number | null
+  recoverySimulated?: boolean
   /** Set only from Gmail's own acceptance of the message; a request sent by hand has none. */
   recoverySentEmail?: SentEmail | null
   /** Follow-ups Gmail accepted, oldest first. */
@@ -139,7 +141,7 @@ export interface CaseState {
 /** Request details preserved before a fresh review; case events and settlements stay case-wide. */
 export type ArchivedRequest = Pick<CaseState,
   'decision' | 'reason' | 'decidedAt' | 'recoveryStage' | 'requestedAmount' | 'approvedAt' | 'legacyApprovedAt' |
-  'knownBeforeReclaim' | 'knownBeforeNote' | 'recoveryDraft' | 'recoverySubject' |
+  'knownBeforeReclaim' | 'knownBeforeNote' | 'recoveryDraft' | 'recoverySubject' | 'recoveryEvidenceAttachment' |
   'recoveryRecipientEmail' | 'requestedResolution' | 'recoveryRequestedAt' | 'recoverySentEmail' |
   'recoveryFollowUps' | 'followUpAfterDays' | 'vendorUpdates' | 'recoveryResolvedAt' |
   'recoveryOutcomeNote' | 'reconciledAt' | 'reconciliationNote' | 'rootCause' |
@@ -147,6 +149,17 @@ export type ArchivedRequest = Pick<CaseState,
 > & { generation: number; archivedAt: number; returnedAmountAtArchive: number }
 
 export const EMPTY_CASE_STATE: CaseState = { decision: null, reason: null, decidedAt: null, recoveryStage: null }
+
+export function recordEvidenceReview(state: CaseState, eligible: boolean, actor: string | null, at: number): CaseState {
+  const position = { decision: state.decision, recoveryStage: state.recoveryStage }
+  const note = state.approvedAt ? 'Review the updated evidence before approving another request.' : null
+  return {
+    ...state,
+    requiresRevalidation: !eligible,
+    approvedAt: null,
+    history: [...(state.history ?? []), { action: 'evidence:reviewed', summary: 'Evidence reviewed', from: position, to: position, actor, at, note }],
+  }
+}
 
 export function confirmCase(reason: string | null): CaseState {
   return { decision: 'confirmed', reason, decidedAt: Date.now(), recoveryStage: 'confirmed' }
@@ -182,12 +195,13 @@ export function updateRecoveryDraft(state: CaseState, recoveryDraft: string): Ca
 
 export function updateRecoveryPackage(
   state: CaseState,
-  update: { subject?: string; body?: string; recipientEmail?: string; requestedResolution?: RecoveryMethod; requestedAmount?: number }
+  update: { subject?: string; body?: string; evidenceAttachment?: string | null; recipientEmail?: string; requestedResolution?: RecoveryMethod; requestedAmount?: number }
 ): CaseState {
   return {
     ...state,
     recoverySubject: update.subject ?? state.recoverySubject,
     recoveryDraft: update.body ?? state.recoveryDraft,
+    ...(update.evidenceAttachment !== undefined ? { recoveryEvidenceAttachment: update.evidenceAttachment } : {}),
     recoveryRecipientEmail: update.recipientEmail ?? state.recoveryRecipientEmail,
     requestedResolution: update.requestedResolution ?? state.requestedResolution,
     requestedAmount: update.requestedAmount ?? state.requestedAmount,
@@ -289,7 +303,7 @@ export function withHistory(previous: CaseState, next: CaseState, actor: string 
     summary = 'Closed without recovery'
   } else if (stageChanged && next.recoveryStage === 'requested') {
     action = 'stage:requested'
-    summary = next.recoverySentEmail ? 'Recovery request sent from Gmail' : 'Recovery request sent'
+    summary = next.recoverySimulated ? 'Recovery request simulated' : next.recoverySentEmail ? 'Recovery request sent from Gmail' : 'Recovery request sent'
   } else if ((approvalChanged || attributionChanged) && next.approvedAt) {
     action = 'recovery:approved'
     summary = 'Customer approved recovery outreach'

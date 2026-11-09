@@ -23,7 +23,7 @@ export function beginNewRequestReview(state: CaseState, at = Date.now()): CaseSt
     decision: state.decision, reason: state.reason, decidedAt: state.decidedAt,
     recoveryStage: state.recoveryStage, requestedAmount: state.requestedAmount,
     approvedAt: state.approvedAt, legacyApprovedAt: state.legacyApprovedAt, knownBeforeReclaim: state.knownBeforeReclaim,
-    knownBeforeNote: state.knownBeforeNote, recoveryDraft: state.recoveryDraft,
+    knownBeforeNote: state.knownBeforeNote, recoveryDraft: state.recoveryDraft, recoveryEvidenceAttachment: state.recoveryEvidenceAttachment,
     recoverySubject: state.recoverySubject, recoveryRecipientEmail: state.recoveryRecipientEmail,
     requestedResolution: state.requestedResolution, recoveryRequestedAt: state.recoveryRequestedAt,
     recoverySentEmail: state.recoverySentEmail ? { ...state.recoverySentEmail, cc: [...state.recoverySentEmail.cc] } : null,
@@ -100,7 +100,6 @@ export function startRecoveryRequest(state: CaseState, amount: number, at = Date
  */
 export function recordEmailSent(state: CaseState, sent: SentEmail, amount: number): CaseState {
   if (state.recoveryStage !== 'confirmed') throw new Error('Only a request waiting to be sent can be recorded as sent.')
-  if (!canRecordRequest(state)) throw new Error('Customer approval is required before sending a new request.')
   if (!sent.messageId || !Number.isFinite(sent.sentAt)) throw new Error('A sent email needs Gmail’s message id and time.')
   if (!Number.isFinite(amount) || amount <= 0) throw new Error('The requested amount must be greater than zero.')
   return {

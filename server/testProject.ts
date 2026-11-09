@@ -26,7 +26,7 @@ export function authorizedProject(id: string, input: { vendor: string; invoice: 
   }
   const project = {
     id, name: id, sourceLabel: `${id}.csv`, mode: 'upload', createdAt: 1, updatedAt: 2,
-    environment: { records, imports: [], result: { findings: [finding] }, caseStates: { [findingId]: { approvedAt: 100, requestedAmount: input.requested, requestedResolution: 'refund', recoveryStage: 'confirmed' } } },
+    environment: { records, imports: [], result: { findings: [finding] }, caseStates: { [findingId]: { decision: 'confirmed', approvedAt: 100, requestedAmount: input.requested, requestedResolution: 'refund', recoveryStage: 'confirmed' } } },
   }
   return { project, findingId }
 }

@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import type { Finding } from '@/types'
 import type { ImportBatch } from '@/ledger/store'
 import { formatCurrency, formatDate } from '@/lib/format'
-import { evaluateEligibility, type EvidenceCheck, type RecoveryEvidence } from '@/recovery/eligibility'
+import { evaluateEligibility, type EvidenceCheck, type PriorReturn, type RecoveryEvidence } from '@/recovery/eligibility'
 import { autofillKey, quickBooksEvidence } from '@/recovery/quickbooksEvidence'
 import { dollarsToCents } from './amounts'
 import { useOptionalAuth } from '@/lib/auth/AuthContext'
@@ -12,8 +12,8 @@ const pulledDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'nume
 /** The gate's checks, asked the way an owner would answer them. The gate itself is unchanged. */
 const CHECK_QUESTION: Record<EvidenceCheck, string> = {
   duplicateImport: 'This isn’t the same payment imported twice',
-  refund: 'No refund has already covered it',
-  credit: 'No vendor credit has already covered it',
+  refund: 'I checked for refunds',
+  credit: 'I checked for applied credits',
   void: 'Neither payment was voided',
   reversal: 'Neither payment was reversed',
   installment: 'It isn’t an installment, a split or retainage',
@@ -60,14 +60,42 @@ function fromLedger(finding: Finding): RecoveryEvidence {
   }
 }
 
-export function EvidencePanel({ finding, findings, imports = [], onSave }: { finding: Finding; findings: Finding[]; imports?: ImportBatch[]; onSave: (evidence: RecoveryEvidence) => void }) {
+export function EvidencePanel({ finding, findings, imports = [], initialEvidence, onSave }: { finding: Finding; findings: Finding[]; imports?: ImportBatch[]; initialEvidence?: RecoveryEvidence; onSave: (evidence: RecoveryEvidence) => void }) {
   const emptyStamp = { reference: '', confirmedBy: '', confirmedAt: 0 }
   const auth = useOptionalAuth()
   // Saved evidence wins; otherwise start from what QuickBooks already knows, then from what the ledger says.
-  const [evidence, setEvidence] = useState<RecoveryEvidence>(() => finding.evidence ?? quickBooksEvidence(finding, imports) ?? fromLedger(finding))
+  const [evidence, setEvidence] = useState<RecoveryEvidence>(() => finding.evidence ?? initialEvidence ?? quickBooksEvidence(finding, imports) ?? fromLedger(finding))
   const [billAmount, setBillAmount] = useState(() => centsToDollars(evidence.obligation.amountMinor))
   const [actor,setActor] = useState(() => (auth?.user && !auth.user.isGuest ? auth.user.name : ''))
   const [saved,setSaved] = useState(false)
+  const [returnAmount, setReturnAmount] = useState('')
+  const [returnMethod, setReturnMethod] = useState<PriorReturn['method']>('refund')
+  const [returnReference, setReturnReference] = useState('')
+  const [appliedBill, setAppliedBill] = useState('')
+  const priorReturns = evidence.priorReturns ?? []
+  const contact = evidence.supplier?.contact
+  const contactInvalid = contact && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim()) || !contact.reference.trim())
+  function editContact(patch: Partial<NonNullable<typeof contact>>) {
+    setEvidence((prev) => ({
+      ...prev,
+      supplier: {
+        ...emptyStamp,
+        supplierId: '',
+        ...prev.supplier,
+        contact: { email: '', source: 'supplier_record', reference: '', ...prev.supplier?.contact, ...patch },
+      },
+    }))
+  }
+  const returnMinor = dollarsToCents(returnAmount)
+  function addPriorReturn() {
+    setEvidence((prev) => ({
+      ...prev,
+      priorReturns: [...(prev.priorReturns ?? []), { ...emptyStamp, amountMinor: returnMinor, method: returnMethod, reference: returnReference.trim(), appliedToBill: returnMethod === 'credit' ? appliedBill.trim() : undefined }],
+    }))
+    setReturnAmount('')
+    setReturnReference('')
+    setAppliedBill('')
+  }
   const gate = evaluateEligibility({...finding,contradictoryEvidence:[]},evidence,findings)
   const autofilled = evidence.autofilled ?? {}
   const fromQuickBooks = (key:string) => autofilled[key]?.source === 'quickbooks' ? <span className="wk-chip" data-tone="accent" data-testid="from-quickbooks" title={`Filled from QuickBooks (${autofilled[key].txnIds.join(', ')}). Check it before saving.`}>From QuickBooks</span> : null
@@ -95,7 +123,7 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
     <div className="wk-panelcard-head"><div><h2 id="evidence-review-title">Review the evidence</h2><p>Your answers are assertions based on the cited records, not independent bank verification.</p></div></div>
     <div className="wk-panelcard-body wk-stack">
       {status}
-      <form className="wk-evq" onSubmit={event=>{event.preventDefault();const stamp={confirmedBy:actor.trim(),confirmedAt:Date.now()};const next={...evidence,entity:{...(evidence.entity ?? {entityId:'',reference:''}),...stamp},supplier:{...(evidence.supplier ?? {supplierId:'',reference:''}),...stamp},payments:evidence.payments.map(p=>({...p,...stamp})),obligation:{...evidence.obligation,...stamp},checks:Object.fromEntries(Object.entries(evidence.checks).map(([key,value])=>[key,{...value,...stamp}]))};setEvidence(next);onSave(next);setSaved(true)}}>
+      <form className="wk-evq" onSubmit={event=>{event.preventDefault();const stamp={confirmedBy:actor.trim(),confirmedAt:Date.now()};const next={...evidence,entity:{...(evidence.entity ?? {entityId:'',reference:''}),...stamp},supplier:{...(evidence.supplier ?? {supplierId:'',reference:''}),...stamp,contact:contact ? {...contact,email:contact.email.trim(),reference:contact.reference.trim()} : undefined},payments:evidence.payments.map(p=>({...p,...stamp})),obligation:{...evidence.obligation,...stamp},checks:Object.fromEntries(Object.entries(evidence.checks).map(([key,value])=>[key,{...value,...stamp}])),priorReturns:priorReturns.map(entry=>({...entry,...stamp}))};setEvidence(next);onSave(next);setSaved(true)}}>
         {autofillDates.length > 0 && <div className="wk-callout" role="note" data-testid="quickbooks-autofill-note"><div className="wk-callout-body"><p>Answers marked <strong>From QuickBooks</strong> were filled from the QuickBooks import{Math.max(...autofillDates) > 0 ? ` of ${pulledDate.format(Math.max(...autofillDates))}` : ''}: the payment IDs, the bill they paid, and the refund and credit searches. Check each one before saving. QuickBooks doesn’t report whether a payment cleared the bank, so settlement still needs your confirmation.</p></div></div>}
 
         <fieldset className="wk-evq-group"><legend>1. Which company and supplier?</legend>
@@ -103,9 +131,27 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
           <div className="wk-evq-grid">
             {field('Company or legal entity',evidence.entity?.entityId ?? '',value=>edit([autofillKey.entityId],prev=>({...prev,entity:{...emptyStamp,...prev.entity,entityId:value}})),autofillKey.entityId,{placeholder:'Company name or entity ID'})}
             {field('Where the company is identified',evidence.entity?.reference ?? '',value=>edit([autofillKey.entityReference],prev=>({...prev,entity:{...emptyStamp,entityId:'',...prev.entity,reference:value}})),autofillKey.entityReference,{placeholder:'Source file, bill, or accounting company'})}
-            {field('Supplier account or vendor ID',evidence.supplier?.supplierId ?? '',value=>edit([autofillKey.supplierId],prev=>({...prev,supplier:{...emptyStamp,...prev.supplier,supplierId:value}})),autofillKey.supplierId,{placeholder:'Vendor number from your accounting records'})}
+            {field('Supplier account or vendor ID',evidence.supplier?.supplierId ?? '',value=>edit([autofillKey.supplierId],prev=>({...prev,supplier:{...emptyStamp,...prev.supplier,supplierId:value,contact:undefined}})),autofillKey.supplierId,{placeholder:'Vendor number from your accounting records'})}
             {field('Where the supplier ID is shown',evidence.supplier?.reference ?? '',value=>edit([autofillKey.supplierReference],prev=>({...prev,supplier:{...emptyStamp,supplierId:'',...prev.supplier,reference:value}})),autofillKey.supplierReference,{placeholder:'Supplier master record or bill'})}
           </div>
+          <details className="wk-evq-details">
+            <summary>Supplier billing contact (optional)</summary>
+            <p className="wk-field-hint">Save a suggestion for this supplier ID in this case. The sender confirms the address at approval.</p>
+            {contact ? <>
+              <div className="wk-evq-grid">
+                {field('Billing email from source', contact.email, (email) => editContact({ email }))}
+                <label className="wk-field">Contact source
+                  <select className="wk-input" value={contact.source} onChange={(event) => editContact({ source: event.target.value as typeof contact.source })}>
+                    <option value="supplier_record">Workspace supplier record</option>
+                    <option value="document">Address found in document</option>
+                  </select>
+                </label>
+                {field('Contact source reference', contact.reference, (reference) => editContact({ reference }))}
+              </div>
+              {contactInvalid ? <p className="wk-field-hint">Enter a valid email and cite where you found it.</p> : null}
+              <button type="button" className="wk-linklike" onClick={() => setEvidence((prev) => ({ ...prev, supplier: prev.supplier && { ...prev.supplier, contact: undefined } }))}>Remove contact suggestion</button>
+            </> : <button type="button" className="wk-btn" data-variant="outline" onClick={() => editContact({})}>Add contact suggestion</button>}
+          </details>
         </fieldset>
 
         <fieldset className="wk-evq-group"><legend>2. Is this one bill?</legend>
@@ -134,6 +180,28 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
         <fieldset className="wk-evq-group"><legend>4. Any refund, credit or void?</legend>
           <p className="wk-field-hint">Make sure the extra payment hasn’t already come back some other way.</p>
           {MONEY_BACK_CHECKS.map(check)}
+          <details className="wk-evq-details">
+            <summary>Refunds and applied credits already confirmed</summary>
+            <p className="wk-field-hint">Use the bank deposit or accounting entry for money already returned against this duplicate.</p>
+            {priorReturns.map((entry, index) => (
+              <div className="wk-inline-form" key={index}>
+                <span>{formatCurrency(entry.amountMinor / 100)} · {entry.method === 'refund' ? 'Refund' : 'Applied credit'} · {entry.reference}</span>
+                <button type="button" className="wk-linklike" onClick={() => setEvidence((prev) => ({ ...prev, priorReturns: priorReturns.filter((_, i) => i !== index) }))}>Remove return {index + 1}</button>
+              </div>
+            ))}
+            <div className="wk-evq-grid">
+              <label className="wk-field">Return type
+                <select className="wk-input" value={returnMethod} onChange={(event) => setReturnMethod(event.target.value as PriorReturn['method'])}>
+                  <option value="refund">Refund received</option>
+                  <option value="credit">Credit applied</option>
+                </select>
+              </label>
+              {field('Prior return amount', returnAmount, setReturnAmount, undefined, { inputMode: 'decimal' })}
+              {field('Confirmation reference', returnReference, setReturnReference)}
+              {returnMethod === 'credit' ? field('Bill the credit was applied to', appliedBill, setAppliedBill) : null}
+            </div>
+            <button type="button" className="wk-btn" data-variant="outline" disabled={!returnMinor || !returnReference.trim() || (returnMethod === 'credit' && !appliedBill.trim()) || priorReturns.length >= 30} onClick={addPriorReturn}>Add confirmed prior return</button>
+          </details>
         </fieldset>
 
         <fieldset className="wk-evq-group"><legend>5. Is it really a duplicate?</legend>
@@ -147,7 +215,7 @@ export function EvidencePanel({ finding, findings, imports = [], onSave }: { fin
 
         <div className="wk-evq-save">
           {field('Person confirming these facts',actor,setActor,undefined,{placeholder:'Your name'})}
-          <button className="wk-btn" data-variant="primary" disabled={!actor.trim() || billAmountInvalid}>Save evidence</button>
+          <button className="wk-btn" data-variant="primary" disabled={!actor.trim() || billAmountInvalid || contactInvalid || Boolean(returnAmount.trim() || returnReference.trim() || appliedBill.trim())}>Save evidence</button>
           {saved && <p role="status" className="wk-field-hint">Saved. {gate.eligible ? 'Review the possible request and get customer approval before outreach.' : 'Answer the rest when you have it.'}</p>}
         </div>
       </form>

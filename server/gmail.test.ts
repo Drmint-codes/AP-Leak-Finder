@@ -5,7 +5,7 @@ import { createApp, type App } from './app.ts'
 import { loadConfig, type ServerConfig } from './config.ts'
 import { openDatabase } from './db.ts'
 import { DevMailer } from './mailer.ts'
-import { buildRawMessage, createGmailClient, GMAIL_SEND_SCOPE, GmailReconnectError, GmailSendError, type GmailClient } from './gmail.ts'
+import { buildRawMessage, createGmailClient, createGmailRoutes, GMAIL_SEND_SCOPE, GmailReconnectError, GmailSendError, type GmailClient } from './gmail.ts'
 import { authorizedProject } from './testProject.ts'
 import { ProjectStore } from './projectStore.ts'
 
@@ -142,6 +142,12 @@ afterEach(async () => {
 })
 
 describe('the message Reclaim hands Gmail', () => {
+  it('adds only the selected evidence summary as a text attachment', () => {
+    const email = { from: 'owner@gmail.com', fromName: '', to: 'ap@vendor.test', cc: [], subject: 'Refund request', body: 'Hello' }
+    const mime = Buffer.from(buildRawMessage({ ...email, evidenceAttachment: 'Invoice INV-1' }), 'base64url').toString('utf8')
+    expect(mime).toContain('Content-Disposition: attachment; filename="payment-evidence.txt"')
+    expect(mime).toContain(Buffer.from('Invoice INV-1').toString('base64'))
+  })
   const decode = (raw: string) => Buffer.from(raw, 'base64url').toString('utf8')
 
   it('is plain text from the connected address, with the approved subject and body', () => {
@@ -292,16 +298,16 @@ describe('sending a recovery request from Gmail', () => {
     expect((await alice.get('/api/account/entitlements')).body).toMatchObject({ plan: 'free', limits: { gmailSending: true, fullLetters: true, aiDrafts: false } })
     await connect(alice)
     const { payload } = await saveApprovedCase(alice)
-    const res = await alice.post('/api/integrations/gmail/send', { ...payload, cc: ['books@alice.test'] })
+    const res = await alice.post('/api/integrations/gmail/send', payload)
     expect(res.status).toBe(200)
-    expect(res.body.send).toMatchObject({ messageId: 'msg-1', from: 'owner@gmail.com', to: 'ap@sierra.test', cc: ['books@alice.test'] })
+    expect(res.body.send).toMatchObject({ messageId: 'msg-1', from: 'owner@gmail.com', to: 'ap@sierra.test', cc: [] })
     expect(res.body.send.sentAt).toBeGreaterThan(0)
     expect(res.text).not.toMatch(/SECRET/)
     expect(gmail.state.calls).toContain('send:fresh-access-SECRET')
     const mime = Buffer.from(gmail.state.sent[0], 'base64url').toString('utf8')
     expect(mime).toContain('From: "Alice Test" <owner@gmail.com>')
     expect(mime).toContain('To: ap@sierra.test')
-    expect(mime).toContain('Cc: books@alice.test')
+    expect(mime).not.toContain('Cc:')
 
     // A second click (or a client that never recorded the first) gets the first send back, not a second email.
     const again = await alice.post('/api/integrations/gmail/send', payload)
@@ -319,6 +325,36 @@ describe('sending a recovery request from Gmail', () => {
     expect(gmail.state.sent).toHaveLength(1)
   })
 
+  it('uses a separate receipt for a newly approved request generation', async () => {
+    const alice = await signedIn('Alice', 'alice@example.com')
+    await connect(alice)
+    const { payload, project, findingId } = await saveApprovedCase(alice)
+    const first = await alice.post('/api/integrations/gmail/send', payload)
+    expect(first.body.send.messageId).toBe('msg-1')
+    Object.assign(project.environment.caseStates[findingId], { activeRequestGeneration: 2, recoveryRecipientEmail: 'billing@sierra.test' })
+    await seedCase(alice, project)
+    expect((await alice.post('/api/integrations/gmail/send', payload)).body.code).toBe('request_generation_changed')
+    const second = await alice.post('/api/integrations/gmail/send', { ...payload, generation: 2, to: 'billing@sierra.test' })
+    expect(second.body.send).toMatchObject({ messageId: 'msg-2', to: 'billing@sierra.test' })
+    expect(gmail.state.sent).toHaveLength(2)
+  })
+
+  it('preserves pre-generation Gmail receipts in generation one', async () => {
+    const alice = await signedIn('Alice', 'alice@example.com')
+    await connect(alice)
+    const { payload } = await saveApprovedCase(alice)
+    expect((await alice.post('/api/integrations/gmail/send', payload)).status).toBe(200)
+    app.db.exec(`
+      ALTER TABLE gmail_sends RENAME TO test_receipts;
+      CREATE TABLE gmail_sends AS SELECT user_id, project_id, finding_id, status, message_id, thread_id,
+        from_email, to_email, cc, amount_minor, created_at, sent_at FROM test_receipts;
+      DROP TABLE test_receipts;
+    `)
+    createGmailRoutes({ db: app.db, appOrigin: 'http://localhost', production: false, gmail: null, userFor: () => null, getProject: () => null, allowSend: () => false })
+    expect(app.db.prepare('SELECT generation, message_id FROM gmail_sends').get()).toEqual({ generation: 1, message_id: 'msg-1' })
+    expect((await alice.post('/api/integrations/gmail/send', payload)).body.code).toBe('gmail_already_sent')
+  })
+
   it('sends only what the customer approved, for a case that passed the checks', async () => {
     const alice = await signedIn('Alice', 'alice@example.com')
     await connect(alice)
@@ -326,6 +362,8 @@ describe('sending a recovery request from Gmail', () => {
     expect((await alice.post('/api/integrations/gmail/send', { ...payload, body: `${LETTER.body}\nP.S. edited after approval` })).body.code).toBe('not_approved_version')
     expect((await alice.post('/api/integrations/gmail/send', { ...payload, subject: 'Different' })).body.code).toBe('not_approved_version')
     expect((await alice.post('/api/integrations/gmail/send', { ...payload, to: 'someone@else.test' })).body.code).toBe('not_approved_version')
+    expect((await alice.post('/api/integrations/gmail/send', { ...payload, cc: ['someone@else.test'] })).body.code).toBe('not_approved_version')
+    expect((await alice.post('/api/integrations/gmail/send', { ...payload, evidenceAttachment: 'Unapproved addition' })).body.code).toBe('not_approved_version')
     expect((await alice.post('/api/integrations/gmail/send', { ...payload, amountRequested: 5000 })).body.code).toBe('recovery_not_authorized')
     expect((await alice.post('/api/integrations/gmail/send', { ...payload, projectId: 'missing' })).body.code).toBe('recovery_not_authorized')
 
@@ -342,12 +380,23 @@ describe('sending a recovery request from Gmail', () => {
     expect(gmail.state.sent).toHaveLength(0)
   })
 
+  it('blocks external mail on sample projects even with an approved package', async () => {
+    const alice = await signedIn('Alice', 'alice@example.com')
+    await connect(alice)
+    const { project, payload } = await saveApprovedCase(alice)
+    const user = app.auth.findUserByEmail('alice@example.com')!
+    new ProjectStore(app.db, null).upsert(user.id, { ...project, mode: 'sample' })
+    expect((await alice.post('/api/integrations/gmail/send', payload)).body.code).toBe('sample_outreach_disabled')
+    expect(gmail.state.sent).toHaveLength(0)
+  })
+
   it('another account cannot send from a case it does not own', async () => {
     const alice = await signedIn('Alice', 'alice@example.com')
     const bob = await signedIn('Bob', 'bob@example.com')
     const { payload } = await saveApprovedCase(alice)
     await connect(bob)
     expect((await bob.post('/api/integrations/gmail/send', payload)).body.code).toBe('recovery_not_authorized')
+    expect((await bob.get(`/api/integrations/gmail/attempts?projectId=${payload.projectId}&findingId=${payload.findingId}`)).status).toBe(404)
     expect(gmail.state.sent).toHaveLength(0)
   })
 
@@ -384,6 +433,8 @@ describe('sending a recovery request from Gmail', () => {
     const retried = await alice.post('/api/integrations/gmail/send', { ...payload, retryUncertain: true })
     expect(retried.status).toBe(200)
     expect(gmail.state.sent).toHaveLength(1)
+    const activity = await alice.get(`/api/integrations/gmail/attempts?projectId=${payload.projectId}&findingId=${payload.findingId}`)
+    expect(activity.body.attempts).toMatchObject([{ status: 'sent', actor: 'Alice Test' }, { status: 'uncertain' }, { status: 'failed' }])
   })
 })
 
@@ -408,6 +459,7 @@ describe('following up from Gmail', () => {
     expect((await followUp(1)).body.code).toBe('gmail_follow_up_too_soon')
 
     clock += 7 * DAY
+    expect((await followUp(1, { to: 'other@vendor.test' })).body.code).toBe('not_approved_version')
     const first = await followUp(1)
     expect(first.status).toBe(200)
     expect(first.body.send).toMatchObject({ messageId: 'msg-2', to: 'ap@sierra.test', sequence: 1 })

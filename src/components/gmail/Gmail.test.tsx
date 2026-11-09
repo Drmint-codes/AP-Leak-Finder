@@ -123,6 +123,7 @@ describe('sending a recovery request from Gmail', () => {
     expect(within(panel).getByRole('button', { name: 'Draft with AI (paid plans)' })).toBeInTheDocument()
     fireEvent.change(body, { target: { value: `${body.value}\n\nOur AP contact is Alice.` } })
     fireEvent.change(within(panel).getByLabelText('Vendor email'), { target: { value: 'ap@sierra.test' } })
+    fireEvent.click(within(panel).getByLabelText('I confirmed this supplier billing address'))
 
     const send = await within(panel).findByRole('button', { name: 'Send from owner@gmail.com' })
     expect(send).toBeDisabled()
@@ -132,12 +133,11 @@ describe('sending a recovery request from Gmail', () => {
     fireEvent.click(within(panel).getByRole('button', { name: 'Approve recovery request' }))
     await waitFor(() => expect(screen.getByTestId('saves')).toHaveTextContent('1'))
     expect(send).toBeEnabled()
-    fireEvent.change(within(panel).getByLabelText('Cc (optional)'), { target: { value: 'controller@ng.test' } })
 
     fireEvent.click(send)
     const confirm = screen.getByTestId('gmail-confirm')
     expect(confirm).toHaveTextContent('Send this request to ap@sierra.test?')
-    expect(confirm).toHaveTextContent('from owner@gmail.com to Sierra Coffee Supply at ap@sierra.test, cc controller@ng.test, asking for $6,800.00 as refund')
+    expect(confirm).toHaveTextContent('from owner@gmail.com to Sierra Coffee Supply at ap@sierra.test, asking for $6,800.00 as refund')
     expect(gmail.state.sent).toHaveLength(0)
     fireEvent.click(within(confirm).getByRole('button', { name: 'Send $6,800.00 request' }))
 
@@ -145,10 +145,10 @@ describe('sending a recovery request from Gmail', () => {
     expect(gmail.state.sent).toHaveLength(1)
     const mime = Buffer.from(gmail.state.sent[0], 'base64url').toString('utf8')
     expect(mime).toContain('To: ap@sierra.test')
-    expect(mime).toContain('Cc: controller@ng.test')
+    expect(mime).not.toContain('Cc:')
     const text = Buffer.from(mime.split('\r\n\r\n')[1].replace(/\r\n/g, ''), 'base64').toString('utf8')
     expect(text).toContain('Our AP contact is Alice.')
-    expect(screen.getByTestId('history')).toHaveTextContent('Recovery request sent from Gmail · From owner@gmail.com to ap@sierra.test, cc controller@ng.test. Gmail message ID msg-1')
+    expect(screen.getByTestId('history')).toHaveTextContent('Recovery request sent from Gmail · From owner@gmail.com to ap@sierra.test. Gmail message ID msg-1')
   })
 
   it('a refused send leaves the case unsent, and an unconfirmed one needs the Sent folder checked', async () => {
@@ -161,6 +161,7 @@ describe('sending a recovery request from Gmail', () => {
     render(<Harness finding={finding} initial={env.caseStates[findingId]} save={save} />)
     const panel = screen.getByTestId('recovery-request')
     fireEvent.change(within(panel).getByLabelText('Vendor email'), { target: { value: 'ap@sierra.test' } })
+    fireEvent.click(within(panel).getByLabelText('I confirmed this supplier billing address'))
     fireEvent.click(within(panel).getByLabelText('No, Reclaim surfaced it'))
     fireEvent.click(within(panel).getByRole('button', { name: 'Approve recovery request' }))
     await waitFor(() => expect(screen.getByTestId('saves')).toHaveTextContent('1'))
@@ -191,7 +192,7 @@ describe('sending a recovery request from Gmail', () => {
     const link = within(step).getByRole('link', { name: 'Connect Gmail' })
     expect(link.getAttribute('href')).toMatch(/^\/api\/integrations\/gmail\/connect\?next=%2F/)
     expect(within(step).getByText(/can’t read, search or delete anything in your inbox/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Copy draft' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mark request sent' })).toBeInTheDocument()
   })
 })
